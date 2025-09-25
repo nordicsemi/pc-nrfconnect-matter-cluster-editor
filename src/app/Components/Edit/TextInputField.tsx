@@ -122,7 +122,8 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
             const strValue = value.toString();
             return strValue.startsWith('0x') ? strValue : `0x${strValue}`;
         }
-        return String(value || '');
+        // Preserve numeric 0 and boolean false; only default null/undefined to ''
+        return String(value ?? '');
     })();
 
     // Handle input changes with hex filtering if needed

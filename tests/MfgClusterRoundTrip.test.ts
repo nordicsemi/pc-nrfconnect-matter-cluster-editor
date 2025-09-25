@@ -136,6 +136,48 @@ describe('Manufacturer cluster round-trip', () => {
         expect(parsedOriginal.struct).toBeUndefined();
         expect(parsedRoundTrip.struct).toBeUndefined();
 
+        // False-valued fields should persist after round-trip
+        // Check USER_LED attribute flags
+        const rtAttrs = Array.isArray(roundTripCluster.attribute)
+            ? roundTripCluster.attribute
+            : [roundTripCluster.attribute];
+        const userLed = rtAttrs.find(
+            (a: any) => a.$ && (a.$ as any).define === 'USER_LED'
+        );
+        expect(userLed).toBeDefined();
+        expect(userLed.$.writable).toBe(false);
+        expect(userLed.$.reportable).toBe(false);
+        expect(userLed.$.isNullable).toBe(false);
+        expect(userLed.$.optional).toBe(false);
+        expect(userLed.$.length).toBe(0);
+        expect(userLed.$.type).toBe('boolean');
+        expect(userLed.$.apiMaturity).toBe('provisional');
+        expect(userLed.$.code).toBeDefined();
+        expect(`${userLed._}`.trim()).toBe('UserLED');
+
+        // Check deviceType include flags (client=false should persist)
+        const dt = parsedRoundTrip.deviceType;
+        const includes = Array.isArray(dt.clusters.include)
+            ? dt.clusters.include
+            : [dt.clusters.include];
+        expect(includes.length).toBeGreaterThan(0);
+        const inc0 = includes[0].$;
+        expect(inc0.cluster).toBe('NordicDevKit');
+        expect(inc0.client).toBe(false);
+        expect(inc0.server).toBe(true);
+        expect(inc0.clientLocked).toBe(false);
+        expect(inc0.serverLocked).toBe(false);
+
+        // Command and event optional flags should persist
+        const rtCmds = Array.isArray(roundTripCluster.command)
+            ? roundTripCluster.command
+            : [roundTripCluster.command];
+        expect(rtCmds[0].$?.optional).toBe(false);
+        const rtEvts = Array.isArray(roundTripCluster.event)
+            ? roundTripCluster.event
+            : [roundTripCluster.event];
+        expect(rtEvts[0].$?.optional).toBe(false);
+
         jest.useRealTimers();
     });
 

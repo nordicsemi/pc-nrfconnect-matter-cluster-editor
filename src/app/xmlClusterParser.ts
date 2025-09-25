@@ -61,6 +61,11 @@ const convertHexStrings = (obj: any): any => {
         return null;
     }
 
+    // Force booleans to explicit string values so they appear in XML as attr="true|false"
+    if (typeof obj === 'boolean') {
+        return obj ? 'true' : 'false';
+    }
+
     if (obj instanceof HexString) {
         return obj.toString();
     }
