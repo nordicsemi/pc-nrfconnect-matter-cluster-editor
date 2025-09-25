@@ -17,7 +17,7 @@ import {
     defaultXMLDeviceClusters,
     defaultXMLDeviceType,
 } from '../defaults';
-import { HexString, XMLDeviceClusterInclude, XMLDeviceType, XMLDeviceTypeIds } from '../defines';
+import { HexString, XMLDeviceClusterInclude, XMLDeviceType } from '../defines';
 import {
     matterDeviceTypeClasses,
     matterDeviceTypeScopes,

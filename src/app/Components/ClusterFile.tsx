@@ -162,7 +162,8 @@ class ClusterFile {
             this.loadedClusterExtension = false;
             return (
                 Array.isArray(this.file.cluster) ||
-                this.file.cluster !== undefined || this.file.deviceType !== undefined
+                this.file.cluster !== undefined ||
+                this.file.deviceType !== undefined
             );
         } catch (error) {
             logger.error('Error parsing XML:', error);
@@ -317,7 +318,9 @@ class ClusterFile {
         // Convert HexString to XMLDeviceTypeIds structure if needed
         if (this.XMLCurrentInstance.deviceType?.deviceId) {
             // Check if deviceId is a HexString and convert it to XMLDeviceTypeIds structure
-            if (this.XMLCurrentInstance.deviceType.deviceId instanceof HexString) {
+            if (
+                this.XMLCurrentInstance.deviceType.deviceId instanceof HexString
+            ) {
                 this.XMLCurrentInstance.deviceType.deviceId = {
                     $: {
                         editable: false,
@@ -329,7 +332,10 @@ class ClusterFile {
 
         if (this.XMLCurrentInstance.deviceType?.profileId) {
             // Check if profileId is a HexString and convert it to XMLDeviceTypeIds structure
-            if (this.XMLCurrentInstance.deviceType.profileId instanceof HexString) {
+            if (
+                this.XMLCurrentInstance.deviceType.profileId instanceof
+                HexString
+            ) {
                 this.XMLCurrentInstance.deviceType.profileId = {
                     $: {
                         editable: false,
@@ -369,7 +375,7 @@ class ClusterFile {
             }
         }
 
-        if(compareToDefault){
+        if (compareToDefault) {
             return this.XMLCurrentInstance.cluster.attribute;
         }
 
@@ -435,7 +441,7 @@ class ClusterFile {
             }
         }
 
-        if(compareToDefault){
+        if (compareToDefault) {
             return this.XMLCurrentInstance.cluster.command;
         }
 
@@ -500,7 +506,7 @@ class ClusterFile {
             }
         }
 
-        if(compareToDefault){
+        if (compareToDefault) {
             return this.XMLCurrentInstance.cluster.event;
         }
 
@@ -620,13 +626,13 @@ class ClusterFile {
                 JSON.stringify(this.XMLCurrentInstance.deviceType) ===
                     JSON.stringify(this.XMLDefaultInstance.deviceType)
             ) {
-                return "";
+                return '';
             }
             if (
                 JSON.stringify(this.XMLCurrentInstance.deviceType) ===
                 JSON.stringify(this.XMLBaseInstance.deviceType)
             ) {
-                return "";
+                return '';
             }
         }
 
@@ -653,7 +659,7 @@ class ClusterFile {
             newEvents?.length === 0 &&
             newDeviceType === null
         ) {
-            return "";
+            return '';
         }
 
         const clusterExtensionInstance: XMLExtensionConfigurator = {

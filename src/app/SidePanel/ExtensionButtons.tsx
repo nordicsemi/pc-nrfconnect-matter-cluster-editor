@@ -69,8 +69,10 @@ const ExtensionButtons = () => {
             return;
         }
 
-        if(raw === null){
-            extensionWarningTextSet('No new attributes, commands, or events compared to the original cluster. Extension cannot be created.');
+        if (raw === null) {
+            extensionWarningTextSet(
+                'No new attributes, commands, or events compared to the original cluster. Extension cannot be created.'
+            );
             extensionWarningOpenSet(true);
             return;
         }

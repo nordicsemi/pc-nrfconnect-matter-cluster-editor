@@ -16,7 +16,9 @@ import { HexString, XMLExtensionConfigurator, XMLFile } from './defines';
  * configurator.
  */
 
-function parseNumbersAndHex(hexString: string): HexString | number | string | null{
+function parseNumbersAndHex(
+    hexString: string
+): HexString | number | string | null {
     // Handle empty strings - return them as null to avoid NaN conversion
     if (hexString === '') {
         return null;

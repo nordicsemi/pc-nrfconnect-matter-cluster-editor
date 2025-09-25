@@ -5,6 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-nested-ternary */
 
 import './__mocks__/mui.mock';
 import './__mocks__/nordic-shared.mock';
@@ -18,10 +19,7 @@ import { HexString } from '../src/app/defines';
 import { parseClusterXML } from '../src/app/xmlClusterParser';
 
 describe('Manufacturer cluster round-trip', () => {
-    const mfgXmlPath = path.join(
-        __dirname,
-        '__objects__/test_mfg_cluster.xml'
-    );
+    const mfgXmlPath = path.join(__dirname, '__objects__/test_mfg_cluster.xml');
     const mfgXml = readFileSync(mfgXmlPath, 'utf-8');
 
     beforeEach(() => {
@@ -223,8 +221,9 @@ describe('Manufacturer cluster round-trip', () => {
                 ? c.attribute
                 : [c.attribute];
             const nameAttr =
-                attrs.find(a => a.$ && (a.$ as any).define === 'DEV_KIT_NAME') ||
-                attrs[0];
+                attrs.find(
+                    a => a.$ && (a.$ as any).define === 'DEV_KIT_NAME'
+                ) || attrs[0];
             nameAttr._ = `${nameAttr._ || ''}X`;
             if (nameAttr.$) {
                 (nameAttr.$ as any).default = 'Nordic Development Kit X';
@@ -253,7 +252,9 @@ describe('Manufacturer cluster round-trip', () => {
 
         const serializedModified = ClusterFile.getSerializedCluster();
         expect(serializedModified.length).toBeGreaterThan(0);
-        const parsedModified = (await parseClusterXML(serializedModified)) as any;
+        const parsedModified = (await parseClusterXML(
+            serializedModified
+        )) as any;
         const modifiedCluster = getFirstCluster(parsedModified);
 
         // Verify modified cluster fields took effect
