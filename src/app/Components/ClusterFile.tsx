@@ -681,33 +681,27 @@ class ClusterFile {
      * @returns {string} The serialized cluster.
      */
     static getSerializedCluster() {
-        if (
-            JSON.stringify(this.XMLCurrentInstance.cluster) ===
-                JSON.stringify(this.XMLDefaultInstance.cluster) &&
-            JSON.stringify(this.XMLCurrentInstance.deviceType) ===
-                JSON.stringify(this.XMLDefaultInstance.deviceType) &&
-            JSON.stringify(this.XMLCurrentInstance.enum) ===
-                JSON.stringify(this.XMLDefaultInstance.enum) &&
-            JSON.stringify(this.XMLCurrentInstance.struct) ===
-                JSON.stringify(this.XMLDefaultInstance.struct)
-        ) {
-            return '';
+        // Always serialize the fully loaded/initialized content, not only diffs,
+        // so that enums and structs are preserved even without modifications.
+        const xmlFile: XMLFile = {} as any;
+
+        if (this.XMLCurrentInstance.cluster) {
+            xmlFile.cluster = [
+                this.XMLCurrentInstance.cluster as unknown as XMLCluster,
+            ];
         }
 
-        const newDeviceType = this.getNewDeviceType(true);
-        const newEnums = this.getNewEnums();
-        const newStructs = this.getNewStructs();
-        const clusterDiff = this.getClusterDiff();
+        if (this.XMLCurrentInstance.enum) {
+            xmlFile.enum = this.XMLCurrentInstance.enum;
+        }
 
-        const xmlFile: XMLFile = {
-            cluster: clusterDiff as XMLCluster[],
-            enum: newEnums,
-            struct: newStructs,
-        };
+        if (this.XMLCurrentInstance.struct) {
+            xmlFile.struct = this.XMLCurrentInstance.struct;
+        }
 
-        // Only include deviceType in the XML file if it's not null
-        if (newDeviceType !== null) {
-            xmlFile.deviceType = newDeviceType as XMLDeviceType;
+        if (this.XMLCurrentInstance.deviceType !== undefined) {
+            xmlFile.deviceType = this.XMLCurrentInstance
+                .deviceType as XMLDeviceType;
         }
 
         return serializeClusterXML(xmlFile);

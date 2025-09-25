@@ -54,9 +54,10 @@ export async function parseClusterXML(
 }
 
 const convertHexStrings = (obj: any): any => {
-    if (!obj) return null;
+    // Preserve boolean false and numeric 0; only coerce undefined/null or empty string
+    if (obj === undefined || obj === null) return null;
 
-    if(obj === ''){
+    if (obj === '') {
         return null;
     }
 
