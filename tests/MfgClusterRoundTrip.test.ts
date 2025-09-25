@@ -136,6 +136,20 @@ describe('Manufacturer cluster round-trip', () => {
         expect(parsedOriginal.struct).toBeUndefined();
         expect(parsedRoundTrip.struct).toBeUndefined();
 
+        // Cluster extension persisted in round-trip
+        expect(parsedOriginal.clusterExtension).toBeDefined();
+        expect(parsedRoundTrip.clusterExtension).toBeDefined();
+        const origExt = parsedOriginal.clusterExtension;
+        const rtExt = parsedRoundTrip.clusterExtension;
+        // Compare key extension bits
+        expect(`${rtExt.$.code}`).toBe(`${origExt.$.code}`);
+        const extAttr = Array.isArray(rtExt.attribute)
+            ? rtExt.attribute[0]
+            : rtExt.attribute;
+        expect(extAttr.$.define).toBe('RANDOM_NUMBER');
+        expect(extAttr.$.optional).toBe(false);
+        expect(extAttr.$.writable).toBe(true);
+
         // False-valued fields should persist after round-trip
         // Check USER_LED attribute flags
         const rtAttrs = Array.isArray(roundTripCluster.attribute)

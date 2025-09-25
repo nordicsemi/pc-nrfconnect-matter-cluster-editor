@@ -683,7 +683,7 @@ class ClusterFile {
     static getSerializedCluster() {
         // Always serialize the fully loaded/initialized content, not only diffs,
         // so that enums and structs are preserved even without modifications.
-        const xmlFile: XMLFile = {} as any;
+        const xmlFile: any = {} as any;
 
         if (this.XMLCurrentInstance.cluster) {
             xmlFile.cluster = [
@@ -702,6 +702,14 @@ class ClusterFile {
         if (this.XMLCurrentInstance.deviceType !== undefined) {
             xmlFile.deviceType = this.XMLCurrentInstance
                 .deviceType as XMLDeviceType;
+        }
+
+        // Persist clusterExtension if present (prefer current instance, fallback to original file)
+        // It allows to keep all the cluster extension entries in the same xml file as the cluster.
+        const currentExt = (this.XMLCurrentInstance as any)?.clusterExtension;
+        const originalExt = (this.file as any)?.clusterExtension;
+        if (currentExt || originalExt) {
+            xmlFile.clusterExtension = currentExt || originalExt;
         }
 
         return serializeClusterXML(xmlFile);
