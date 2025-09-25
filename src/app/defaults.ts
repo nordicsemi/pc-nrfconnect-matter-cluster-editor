@@ -54,6 +54,7 @@ export const defaultXMLStructItem: XMLStructItem = {
         fieldId: '',
         name: '',
         type: '',
+        array: false,
         length: 0,
         minLength: 0,
         min: 0,
@@ -69,6 +70,7 @@ export const defaultXMLCommandArgument: XMLCommandArgument = {
         type: '',
         isNullable: false,
         optional: false,
+        array: false,
     },
 };
 
@@ -77,6 +79,7 @@ export const defaultXMLEventField: XMLEventField = {
         id: new HexString(0),
         name: '',
         type: '',
+        array: false,
     },
 };
 
@@ -94,6 +97,7 @@ export const defaultXMLAttribute: XMLAttribute = {
         code: new HexString(0),
         define: '',
         type: '',
+        array: false,
         length: 0,
         min: 0,
         max: 0,
@@ -139,6 +143,7 @@ export const defaultXMLEnum: XMLEnum = {
     $: {
         name: '',
         type: '',
+        array: false,
     },
     cluster: [],
     item: [],

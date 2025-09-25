@@ -49,8 +49,6 @@ limitations under the License.
     <type id="0x3A" description="Double precision"         name="double"            size="8"  analog="true"   />
     <type id="0x41" description="Octet String"             name="octet_string"                composite="true"/>
     <type id="0x43" description="Long Octet String"        name="long_octet_string"           composite="true"/>
-    <type id="0x48" description="List"                     name="array"                       composite="true"/>
-    <type id="0x4C" description="Structure"                name="struct"                      composite="true"/>
     <!-- Derived Data Types -->
     <type id="0x42" description="Character String"         name="char_string"                 composite="true"/>
     <type id="0x44" description="Long Character String"    name="long_char_string"            composite="true"/>

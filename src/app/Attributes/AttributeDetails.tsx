@@ -58,6 +58,7 @@ const AttributeDetails: React.FC<XMLAttribute> = ({ $, access }) => (
                 $.reportable ? 'Reportable' : null,
                 $.writable ? 'Writable' : null,
                 $.optional ? 'Optional' : null,
+                $.array ? 'Array' : null,
             ]}
         />
         <DetailsItem>

@@ -52,6 +52,7 @@ const EventDetails: React.FC<XMLEvent> = ({ description, field }) => (
                         id: f.$.id,
                         name: f.$.name,
                         type: f.$.type,
+                        array: f.$.array,
                     })) || [],
                 size: 'm',
             },

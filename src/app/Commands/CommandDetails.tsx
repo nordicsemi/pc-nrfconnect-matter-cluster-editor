@@ -65,6 +65,7 @@ const CommandDetails: React.FC<XMLCommand> = ({
                         type: argument.$.type,
                         isNullable: argument.$.isNullable,
                         optional: argument.$.optional,
+                        array: argument.$.array,
                     })) || [],
                 size: 'xl',
             },
@@ -74,8 +75,6 @@ const CommandDetails: React.FC<XMLCommand> = ({
                     access?.map(acc => ({
                         name: acc.$.op,
                         type: acc.$.role || '',
-                        isNullable: undefined,
-                        optional: undefined,
                     })) || [],
                 size: 'sm',
             },

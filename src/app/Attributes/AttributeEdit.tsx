@@ -120,6 +120,8 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
                 "The API maturity level of the attribute. The valid values are 'provisional', 'internal', 'stable', and 'deprecated'. This field is optional and items without it are considered to be stable.",
             description:
                 'The attribute description that explains the purpose of the attribute and its use cases.',
+            array:
+                "The flag indicating if the attribute is an array. The valid values are 'true' and 'false'.",
         };
         return tooltips[field] || '';
     };
@@ -139,7 +141,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
 
     const handleDisabled = (field: string, items: AttributeValuesType) => {
         if (field === 'length') {
-            if (Object.keys(items).includes('type') && items.type === 'array') {
+            if (Object.keys(items).includes('array') && items.array === true) {
                 return false;
             }
             return true;
