@@ -156,8 +156,8 @@ const DeviceType: React.FC = () => {
                 'Choose "Endpoint" if the device represents the physical device or product. ' +
                 'All other classes of device types are "Endpoint" scoped.',
             profileId:
-                'The profile ID reflects the current version of the Matter specification where the least significant byte is the major version and the most significant byte is the minor version. ' +
-                'For example, the profile ID for Matter 1.4 is 0x0104. ' +
+                'The profile ID reflects the current version of the Matter specification where the major version is the most significant byte (0x01), the minor version is the second most significant byte (0x04), and the dot version is the third most significant byte (0x02).' +
+                'For example, the profile ID for Matter 1.4 is 0x0104, 0x010402 for Matter 1.4.2, etc. ' +
                 'Editable means that the profile ID can be changed through Matter network.',
             deviceId:
                 'A unique identifier for the device, essential for device recognition. ' +

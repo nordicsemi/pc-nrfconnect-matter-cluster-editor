@@ -244,8 +244,20 @@ const InnerElementEdit = <T,>({
         setInternalList(updatedElementList);
     };
 
+    const getAllFieldKeys = (elem: T): (keyof T)[] => {
+        const elemKeys = Object.keys(elem as object) as (keyof T)[];
+        const protoKeys = Object.keys(defaultPrototype as object) as (keyof T)[];
+        const merged = new Set<keyof T>([...protoKeys, ...elemKeys]);
+        return Array.from(merged);
+    };
+
+    const getFieldValue = (elem: T, field: keyof T) => {
+        const v = elem[field];
+        return v !== undefined ? v : (defaultPrototype as any)[field];
+    };
+
     const renderField = (elem: T, field: keyof T, index: number) => {
-        const value = elem[field];
+        const value = getFieldValue(elem, field);
 
         if (typeof value === 'boolean') {
             return null;
@@ -308,12 +320,11 @@ const InnerElementEdit = <T,>({
     };
 
     const renderBooleanFields = (elem: T, index: number) => {
-        const booleanFields = Object.entries(elem as object)
-            .filter(
-                ([_, value]) =>
-                    typeof value === 'boolean' || typeof _ === 'boolean'
-            )
-            .map(([field]) => field as keyof T);
+        const allKeys = getAllFieldKeys(elem);
+        const booleanFields = allKeys.filter(field => {
+            const v = getFieldValue(elem, field);
+            return typeof v === 'boolean';
+        });
 
         if (booleanFields.length === 0) {
             return null;
@@ -326,7 +337,7 @@ const InnerElementEdit = <T,>({
                         <Grid2 key={String(field)}>
                             <BooleanField
                                 field={camelCaseToTitle(String(field))}
-                                value={elem[field] as boolean}
+                                value={getFieldValue(elem, field) as boolean}
                                 required={!isOptional?.(field)}
                                 disabled={isDisabled?.(field, elem) ?? false}
                                 tooltip={onTooltipDisplay(field)}
@@ -373,7 +384,7 @@ const InnerElementEdit = <T,>({
                     <List>
                         {internalList.map((elem, index) => (
                             <ListItem key={index} className="innerListItem">
-                                {Object.keys(elem as object).map(field =>
+                                {getAllFieldKeys(elem).map(field =>
                                     renderField(elem, field as keyof T, index)
                                 )}
                                 {renderBooleanFields(elem, index)}
