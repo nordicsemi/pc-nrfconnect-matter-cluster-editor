@@ -92,10 +92,11 @@ const AttributesTable: React.FC<{ active: boolean }> = () => {
         attributes.forEach(attribute => {
             if (!attribute._) {
                 attribute._ = attribute.description || attribute.$.name;
-            } else {
-                attribute.description = attribute._;
-                attribute.$.name = attribute._;
             }
+
+            // Remove redundant description and name fields, because we are using the _ field
+            delete attribute.description;
+            attribute.$.name = "";
         });
     };
 
