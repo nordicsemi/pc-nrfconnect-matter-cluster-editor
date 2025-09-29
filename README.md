@@ -25,11 +25,9 @@ in the nRF Connect for Desktop documentation.
 
 ## Documentation
 
-See the
-[nRF Connect Matter Manufacturer Cluster Editor tool](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/getting_started/manufacturer_cluster_editor_tool.html)
-user guide in the nRF Connect SDK documentation to learn about the tool usage.
+See the [Matter Cluster Editor app](https://docs.nordicsemi.com/bundle/nrf-connect-matter-cluster-editor/page/index.html) official documentation, which includes information about the [application UI](https://docs.nordicsemi.com/bundle/nrf-connect-matter-cluster-editor/page/overview.html) and [guides about how to create new Matter clusters](https://docs.nordicsemi.com/bundle/nrf-connect-matter-cluster-editor/page/creating_new_cluster.html).
 
-To learn how to use the editor in practice, see the
+To learn how to use the editor in practice, see also the
 [Creating manufacturer-specific clusters in Matter application](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/getting_started/custom_clusters.html)
 user guide in the nRF Connect SDK documentation.
 
