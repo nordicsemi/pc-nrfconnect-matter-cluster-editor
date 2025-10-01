@@ -221,7 +221,7 @@ export interface XMLAttribute {
     // Description is treated as a name
     access?: XMLClusterAccess[];
     description?: string;
-    _: string;
+    _?: string;
 }
 
 export interface XMLCommand {

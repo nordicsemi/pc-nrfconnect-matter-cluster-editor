@@ -96,7 +96,8 @@ const AttributesTable: React.FC<{ active: boolean }> = () => {
 
             // Remove redundant description and name fields, because we are using the _ field
             delete attribute.description;
-            attribute.$.name = "";
+            attribute.$.name = attribute._;
+            delete attribute._;
         });
     };
 
