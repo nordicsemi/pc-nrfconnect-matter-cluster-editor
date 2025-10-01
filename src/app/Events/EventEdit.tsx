@@ -99,8 +99,7 @@ const EventEdit: React.FC<EditRowWrapper<XMLEvent>> = ({
             id: 'The numeric identifier of the field. It shall be unique within the event.',
             name: 'The name of the field. It shall be unique within the event.',
             type: 'The data type of the field. The valid values are listed in the src/app/zap-templates/zcl/data-model/chip/chip-types.xml file, relative to the Matter project root directory.',
-            array:
-                "The flag indicating if the field is an array. The valid values are 'true' and 'false'.",
+            array: "The flag indicating if the field is an array. The valid values are 'true' and 'false'.",
         };
         return tooltips[field] || '';
     };

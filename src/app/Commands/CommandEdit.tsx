@@ -113,8 +113,7 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
                 "The flag indicating if the argument can be null. The valid values are 'true' and 'false'.",
             optional:
                 "The flag indicating if the command is optional or mandatory. The valid values are 'true' and 'false'.",
-            array:
-                "The flag indicating if the argument is an array. The valid values are 'true' and 'false'.",
+            array: "The flag indicating if the argument is an array. The valid values are 'true' and 'false'.",
         };
         return tooltips[field] || '';
     };

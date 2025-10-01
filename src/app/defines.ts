@@ -239,7 +239,13 @@ export interface XMLCommand {
 }
 
 export interface XMLCommandArgument {
-    $: { name: string; type: string; isNullable?: boolean; optional?: boolean; array?: boolean };
+    $: {
+        name: string;
+        type: string;
+        isNullable?: boolean;
+        optional?: boolean;
+        array?: boolean;
+    };
 }
 
 export interface XMLClusterAccess {

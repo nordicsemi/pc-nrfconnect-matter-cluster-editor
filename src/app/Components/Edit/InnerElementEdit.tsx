@@ -246,7 +246,9 @@ const InnerElementEdit = <T,>({
 
     const getAllFieldKeys = (elem: T): (keyof T)[] => {
         const elemKeys = Object.keys(elem as object) as (keyof T)[];
-        const protoKeys = Object.keys(defaultPrototype as object) as (keyof T)[];
+        const protoKeys = Object.keys(
+            defaultPrototype as object
+        ) as (keyof T)[];
         const merged = new Set<keyof T>([...protoKeys, ...elemKeys]);
         return Array.from(merged);
     };
