@@ -185,4 +185,9 @@ jest.mock('@nordicsemiconductor/pc-nrfconnect-shared', () => ({
         error: jest.fn(),
         info: jest.fn(),
     },
+    telemetry: {
+        sendEvent: jest.fn(),
+        sendErrorReport: jest.fn(),
+        enableTelemetry: jest.fn(),
+    },
 }));

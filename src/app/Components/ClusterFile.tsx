@@ -6,7 +6,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { logger } from '@nordicsemiconductor/pc-nrfconnect-shared';
+import { logger, telemetry } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
 import { defaultXMLConfigurator } from '../defaults';
 import {
@@ -159,6 +159,7 @@ class ClusterFile {
             const configurator = await parseClusterXML(content);
             this.file = configurator as XMLFile;
             logger.info('Loaded cluster file:', fileUrl.name);
+            telemetry.sendEvent('Loaded cluster file');
             this.loadedClusterExtension = false;
             return (
                 Array.isArray(this.file.cluster) ||
@@ -166,6 +167,7 @@ class ClusterFile {
                 this.file.deviceType !== undefined
             );
         } catch (error) {
+            telemetry.sendEvent('Error parsing XML file while loading cluster');
             logger.error('Error parsing XML:', error);
             return false;
         }
@@ -269,9 +271,14 @@ class ClusterFile {
             this.loadedClusterExtension = true;
 
             eventEmitter.emit('xmlInstanceChanged');
+
+            telemetry.sendEvent('Loaded cluster exension file');
             logger.info('Loaded cluster extension file:', fileUrl.name);
             return true;
         } catch (error) {
+            telemetry.sendErrorReport(
+                'Error parsing XML while loading cluster extension'
+            );
             logger.error('Error parsing XML:', error);
             return false;
         }
@@ -640,6 +647,34 @@ class ClusterFile {
     }
 
     /**
+     * Sends telemetry metrics for cluster extension save operation.
+     * Only sends counts of elements, not their content.
+     *
+     * @function ClusterFile.sendClusterExtensionSaveMetrics
+     * @param {XMLAttribute[]} attributes - The attributes to count
+     * @param {XMLCommand[]} commands - The commands to count
+     * @param {XMLEvent[]} events - The events to count
+     * @param {XMLDeviceType | string} deviceType - The device type (if any)
+     * @returns {void}
+     */
+    private static sendClusterExtensionSaveMetrics(
+        attributes: XMLAttribute[],
+        commands: XMLCommand[],
+        events: XMLEvent[],
+        deviceType: XMLDeviceType | string
+    ) {
+        const metrics = {
+            attributesCount: attributes?.length || 0,
+            commandsCount: commands?.length || 0,
+            eventsCount: events?.length || 0,
+            hasDeviceType: !!deviceType && deviceType !== '',
+        };
+
+        telemetry.sendEvent('Saved cluster extension', metrics);
+        logger.info('Cluster extension save metrics:', metrics);
+    }
+
+    /**
      * Gets the serialized cluster extension.
      *
      * This function compares the current cluster with the base cluster and returns the serialized cluster extension.
@@ -675,7 +710,49 @@ class ClusterFile {
         clusterExtensionInstance.clusterExtension.event = newEvents;
         clusterExtensionInstance.clusterExtension.deviceType =
             newDeviceType as XMLDeviceType;
+
+        // Send telemetry about what was saved
+        this.sendClusterExtensionSaveMetrics(
+            newAttributes || [],
+            newCommands || [],
+            newEvents || [],
+            newDeviceType || ''
+        );
+
         return serializeClusterXML(clusterExtensionInstance);
+    }
+
+    /**
+     * Sends telemetry metrics for cluster save operation.
+     * Only sends counts of elements, not their content.
+     *
+     * @function ClusterFile.sendClusterSaveMetrics
+     * @param {XMLCluster} cluster - The cluster to count elements from
+     * @param {XMLEnum[]} enums - The enums to count
+     * @param {XMLStruct[]} structs - The structs to count
+     * @param {boolean} hasDeviceType - Whether device type is present
+     * @param {boolean} hasClusterExtension - Whether cluster extension is present
+     * @returns {void}
+     */
+    private static sendClusterSaveMetrics(
+        cluster: XMLCluster | undefined,
+        enums: XMLEnum[] | undefined,
+        structs: XMLStruct[] | undefined,
+        hasDeviceType: boolean,
+        hasClusterExtension: boolean
+    ) {
+        const metrics = {
+            attributesCount: cluster?.attribute?.length || 0,
+            commandsCount: cluster?.command?.length || 0,
+            eventsCount: cluster?.event?.length || 0,
+            enumsCount: enums?.length || 0,
+            structsCount: structs?.length || 0,
+            hasDeviceType,
+            hasClusterExtension,
+        };
+
+        telemetry.sendEvent('Saved cluster', metrics);
+        logger.info('Cluster save metrics:', metrics);
     }
 
     /**
@@ -717,6 +794,15 @@ class ClusterFile {
         if (currentExt || originalExt) {
             xmlFile.clusterExtension = currentExt || originalExt;
         }
+
+        // Send telemetry about what was saved
+        this.sendClusterSaveMetrics(
+            this.XMLCurrentInstance.cluster,
+            this.XMLCurrentInstance.enum,
+            this.XMLCurrentInstance.struct,
+            this.XMLCurrentInstance.deviceType !== undefined,
+            !!(currentExt || originalExt)
+        );
 
         return serializeClusterXML(xmlFile);
     }

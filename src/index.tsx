@@ -7,7 +7,11 @@
 import 'regenerator-runtime/runtime';
 
 import React from 'react';
-import { App, render } from '@nordicsemiconductor/pc-nrfconnect-shared';
+import {
+    App,
+    render,
+    telemetry,
+} from '@nordicsemiconductor/pc-nrfconnect-shared';
 
 import AttributesTable from './app/Attributes/Attributes';
 import ClusterPage from './app/Cluster/Cluster';
@@ -22,6 +26,8 @@ import StructTable from './app/Structures/Structs';
 import '../resources/css/index.scss';
 
 const reducer = undefined;
+
+telemetry.enableTelemetry();
 
 render(
     <App

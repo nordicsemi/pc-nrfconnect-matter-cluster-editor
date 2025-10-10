@@ -10,6 +10,7 @@ import {
     InfoDialog,
     logger,
     Overlay,
+    telemetry,
     useHotKey,
 } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
@@ -84,6 +85,7 @@ const ExtensionButtons = () => {
         a.download = ClusterFile.fileName.replace('.xml', '_extension.xml');
         a.click();
         URL.revokeObjectURL(url);
+        telemetry.sendEvent('Saved cluster extension to XML file');
         logger.info('Extension saved to file');
     };
 

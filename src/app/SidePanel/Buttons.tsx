@@ -13,6 +13,7 @@ import {
     InfoDialog,
     logger,
     Overlay,
+    telemetry,
     useHotKey,
 } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
@@ -133,6 +134,7 @@ const OpenSavePanelButtons = () => {
         a.download = ClusterFile.fileName;
         a.click();
         URL.revokeObjectURL(url);
+        telemetry.sendEvent('Saved the cluster to XML file');
         logger.info('Saved the cluster');
     };
 

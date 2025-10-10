@@ -8,6 +8,7 @@
 
 import * as React from 'react';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { telemetry } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
 import eventEmitter from './EventEmitter';
 import ClusterTable from './Table';
@@ -261,6 +262,11 @@ const Component = <T,>({
             eventEmitter.off('xmlInstanceSave', saveRows);
         };
     }, [saveAllRows]);
+
+    useEffect(() => {
+        // Send telemetry event when Component is rendered
+        telemetry.sendEvent(`Component opened: ${name}`);
+    }, [name]);
 
     /// Render a table according to the current name, headers, rows and addRow callback function
     return ClusterTable(name, headers, rows, addRow, description);
