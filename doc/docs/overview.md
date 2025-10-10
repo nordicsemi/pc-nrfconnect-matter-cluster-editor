@@ -17,6 +17,15 @@ On the left side of the tool, the app includes several UI elements for managing 
 
 ![Side panel](./screenshots/matter_cluster_tool_side_panel.png "Side panel")
 
+### Cluster name field
+
+This is the blue area at the top of the side panel sections. When you load a Matter cluster XML file, the name of the cluster is displayed here (for example, `NordicDevKit` in the following image.)
+
+![Filled cluster name field above the side panels](./screenshots/matter_cluster_tool_name.png "Filled cluster name field above the side panels")
+
+!!! info "Tip"
+    You can change the name of the cluster by clicking on the name bar and typing a new name. The new name must be unique across all available clusters in the Matter Data Model.
+
 ### XML Cluster File
 
 The buttons in this section let you load Matter cluster XML files and save them.
@@ -40,20 +49,45 @@ If there is no difference, the tool shows a notification indicating that there i
 
 ![Save extension no difference](./screenshots/matter_cluster_tool_save_extension_no_difference.png "Save extension no difference")
 
-### Cluster name field
+### Utility
 
-This is the blue area at the top of the side panel sections. When you load a Matter cluster XML file, the name of the cluster is displayed here (for example, `NordicDevKit` in the following image.)
+This tab includes utilities mechanism that you can use to manipulate edited data.
 
-![Filled cluster name field above the side panels](./screenshots/matter_cluster_tool_name.png "Filled cluster name field above the side panels")
+Currently the following utilities are supported:
 
-!!! info "Tip"
-    You can change the name of the cluster by clicking on the name bar and typing a new name. The new name must be unique across all available clusters in the Matter Data Model.
+* **Clear All**
 
-If the file contains more than one cluster, the tool shows a notification with the list of available clusters, as in the following image.
+  ![Utiities](./screenshots/matter_cluster_tool_utilities.png "Utiities")
 
-![Load cluster file](./screenshots/matter_cluster_tool_load_multiple_clusters.png "Load cluster file")
+  Use this button to wipe all data stored in the current window and reset the application to its initial state. This operation cannot be undone, so the following message appears:
 
-Selecting a cluster from the list loads the cluster definition or cluster extension.
+  ![Warning before clearing all data](./screenshots/matter_cluster_tool_warning_before_clearing_all_data.png "Warning before clearing all data")
+
+### Loaded file
+
+This tab shows a name of the currently loaded file.
+
+### Elements in the file
+
+If an XML file contains multiple device types, clusters, or cluster extensions, all correctly recognized elements will appear in this section.
+
+Depending on the contents of the loaded file, this section can display up to three separate lists:
+
+![Elemnents in the file](./screenshots/matter_cluster_tool_elements_in_the_file.png "Elements in the file")
+
+| List name        | Description                                                        |
+|------------------|--------------------------------------------------------------------|
+| **Clusters**     | This list displays all clusters found in the file.                 |
+| **Device Types** | This list displays all device types found in the file.             |
+| **Extensions**   | This list displays all cluster extensions found in the file.       |
+
+For example, if the file contains multiple device types, you can see a similar list to the following one:
+
+![Multiple device types](./screenshots/matter_cluster_tool_multiple_device_types.png "Multiple device types")
+
+Click an item in one of the lists to open and edit it in the main window.
+Please note: You can only edit one cluster or cluster extension in the main window at a time.
+If you want to make changes to a different item, simply select it from the list, your changes will be preserved and you can switch between items freely.
 
 ## Main window
 
@@ -523,3 +557,22 @@ The tool validates that all required fields are filled before saving. If require
 If there are no differences between the current cluster and the loaded cluster, the tool shows a message indicating no data to create an extension:
 
 ![Save extension no difference](./screenshots/matter_cluster_tool_save_extension_no_difference.png "Save extension no difference")
+
+If the loaded XML file does have elements that have not defined all mandatory fields, the tool show a message indicating all of them to inform user that the missing values were replaced with the default values:
+
+![Missing configuration](./screenshots/matter_cluster_tool_missing_configuration.png "Missing configuration")
+
+If the loaded XML file contains multiple elements, while saving cluster to file, the tool shows a message to choose a ways of saving:
+
+![Save options](./screenshots/matter_cluster_tool_save_options.png "Save options")
+
+The first option **Save only the edited element** saves only the current device type and/or cluster.
+The second option **Save all data from original file with your edits** saves all loaded data with all modifications that you provided.
+
+If you choose one of the array types, then you must set the **Length** field bigger than 0. If it is set to 0, the following message appears:
+
+![Wrong array](./screenshots/matter_cluster_tool_wrong_array.png "Wrong array")
+
+If you choose one of the numerical types, then the **Max** value must be bigger thatn **Min** value. If the condition is not met, the following message appears:
+
+![Wrong max size](./screenshots/matter_cluster_tool_wrong_max_size.png "Wrong max size")
