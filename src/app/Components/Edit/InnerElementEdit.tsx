@@ -105,6 +105,23 @@ interface InnerElementEditProps<T> {
      * @returns {boolean} Whether the field should be disabled
      */
     isDisabled?: (field: keyof T, value: T) => boolean;
+    /**
+     * A callback function to determine if a field is valid.
+     *
+     * @callback isValid
+     * @param {keyof T} field - The field that is being checked if it is valid
+     * @param {T} value - The value of the field
+     * @returns {boolean} Whether the field is valid
+     */
+    isValid?: (field: keyof T, value: T) => boolean;
+    /**
+     * A callback function to get the invalid messages for a given field.
+     *
+     * @callback getInvalidMessages
+     * @param {keyof T} field - The field that is being checked if it is valid
+     * @returns {string} The invalid messages for the field
+     */
+    getInvalidMessages?: (field: keyof T) => string;
     defaultPrototype: T;
     typeFields?: {
         [K in keyof T]?: readonly string[];
@@ -196,6 +213,8 @@ const InnerElementEdit = <T,>({
     onTooltipDisplay,
     isOptional,
     isDisabled,
+    isValid,
+    getInvalidMessages,
     defaultPrototype,
     dropdownFields,
     typeFields,
@@ -208,6 +227,8 @@ const InnerElementEdit = <T,>({
     const [mandatoryCheckWarningOpen, setMandatoryCheckWarningOpen] =
         useState<boolean>(false);
     const [currentLength, setCurrentLength] = useState<number>(elements.length);
+    const [validationWarningOpen, setValidationWarningOpen] =
+        useState<boolean>(false);
 
     useEffect(() => {
         setInternalList(elements);
@@ -243,6 +264,13 @@ const InnerElementEdit = <T,>({
         }
         setInternalList(updatedElementList);
     };
+
+    const allChecksPassed = () =>
+        internalList.every(element =>
+            Object.entries(element as object).every(
+                ([key]) => isValid?.(key as keyof T, element) ?? true
+            )
+        );
 
     const getAllFieldKeys = (elem: T): (keyof T)[] => {
         const elemKeys = Object.keys(elem as object) as (keyof T)[];
@@ -360,6 +388,14 @@ const InnerElementEdit = <T,>({
                 label={buttonLabel}
                 badgeContent={currentLength}
                 onClick={() => {
+                    if (!allMandatoryFieldsFilledIn()) {
+                        setMandatoryCheckWarningOpen(true);
+                        return;
+                    }
+                    if (!allChecksPassed()) {
+                        setValidationWarningOpen(true);
+                        return;
+                    }
                     setInternalList(elements);
                     setCurrentLength(elements.length);
                     setShowInnerElementEdit(true);
@@ -447,6 +483,10 @@ const InnerElementEdit = <T,>({
                                 setMandatoryCheckWarningOpen(true);
                                 return;
                             }
+                            if (!allChecksPassed()) {
+                                setValidationWarningOpen(true);
+                                return;
+                            }
 
                             setShowInnerElementEdit(false);
                             setCurrentLength(internalList.length);
@@ -464,6 +504,32 @@ const InnerElementEdit = <T,>({
                     >
                         You have not filled in all mandatory fields. Please fill
                         in all fields marked with * before saving.
+                    </InfoDialog>
+                    <InfoDialog
+                        isVisible={validationWarningOpen}
+                        onHide={() => setValidationWarningOpen(false)}
+                        title="Not all fields are valid"
+                    >
+                        You have not filled in all fields correctly. Please fix
+                        the following validation errors before saving:
+                        <ul>
+                            {internalList.flatMap((element, elementIndex) =>
+                                Object.keys(element as object)
+                                    .filter(
+                                        key =>
+                                            !isValid?.(key as keyof T, element)
+                                    )
+                                    .map(key => (
+                                        <li key={`${elementIndex}-${key}`}>
+                                            Element {elementIndex + 1} -{' '}
+                                            {camelCaseToTitle(String(key))}:{' '}
+                                            {getInvalidMessages?.(
+                                                key as keyof T
+                                            ) || 'Invalid value'}
+                                        </li>
+                                    ))
+                            )}
+                        </ul>
                     </InfoDialog>
                 </DialogActions>
             </Dialog>

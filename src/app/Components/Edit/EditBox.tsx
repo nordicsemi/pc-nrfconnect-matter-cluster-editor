@@ -56,9 +56,10 @@ export interface EditBoxProps<T> {
     /**
      * @callback isOptional
      * @param {keyof T} field - The field that is being checked if it is optional
+     * @param {T} value - The dield value
      * @returns {boolean} Whether the field is optional
      */
-    isOptional?: (field: keyof T) => boolean;
+    isOptional?: (field: keyof T, value?: T) => boolean;
     /**
      * @callback isDisabled
      * @param {keyof T} field - The field that is being checked if it is disabled
@@ -66,6 +67,22 @@ export interface EditBoxProps<T> {
      * @returns {boolean} Whether the field is disabled
      */
     isDisabled?: (field: keyof T, value: T) => boolean;
+    /**
+     * Validate callback. Checks if field is valid according to the whole values set.
+     *
+     * @callback isValid
+     * @param {keyof T} field - The field that is being checked if it is valid
+     * @param {T} value - The value of the object being edited
+     * @returns {boolean} Whether the field is valid
+     */
+    isValid?: (field: keyof T, value: T) => boolean;
+
+    /**
+     * @callback getInvalidFields
+     * @param {T} value - The value of the object being edited
+     * @returns {string[]} The invalid fields
+     */
+    getInvalidMessages?: (field: keyof T) => string;
     open: boolean;
     children?: ReactNode;
     typeFields?: { [key in keyof T]?: readonly string[] };
@@ -142,6 +159,8 @@ const EditBox = <T,>({
     treatAsHex,
     isOptional = () => false,
     isDisabled = () => false,
+    isValid = () => true,
+    getInvalidMessages = () => '',
     children,
     typeFields = {},
     dropdownFields = {},
@@ -150,6 +169,8 @@ const EditBox = <T,>({
 }: EditBoxProps<T>) => {
     const [localValue, setLocalValue] = useState<T>(value);
     const [mandatoryCheckWarningOpen, mandatoryCheckWarningOpenSet] =
+        React.useState(false);
+    const [validationWarningOpen, validationWarningOpenSet] =
         React.useState(false);
 
     useEffect(() => {
@@ -180,6 +201,11 @@ const EditBox = <T,>({
                 (val !== null && val !== undefined && val !== '')
         );
 
+    const allChecksPassed = () =>
+        Object.entries(localValue as object).every(([key]) =>
+            isValid(key as keyof T, localValue)
+        );
+
     const renderField = (field: keyof T) => {
         const val = localValue[field];
         const dropdownOptions = dropdownFields[field];
@@ -196,7 +222,7 @@ const EditBox = <T,>({
                     field={camelCaseToTitle(String(field))}
                     value={val as string}
                     availableTypes={typeFields[field] as string[]}
-                    required={!isOptional(field)}
+                    required={!isOptional(field, localValue)}
                     disabled={isDisabled(field, localValue)}
                     tooltip={onTooltipDisplay(field)}
                     onChange={(v: string) => handleChange(field, v)}
@@ -307,6 +333,10 @@ const EditBox = <T,>({
                             mandatoryCheckWarningOpenSet(true);
                             return;
                         }
+                        if (!allChecksPassed()) {
+                            validationWarningOpenSet(true);
+                            return;
+                        }
 
                         onSave(localValue);
                     }}
@@ -320,6 +350,26 @@ const EditBox = <T,>({
                 >
                     You have not filled in all mandatory fields. Please fill in
                     all fields marked with * before saving.
+                </InfoDialog>
+                <InfoDialog
+                    isVisible={validationWarningOpen}
+                    onHide={() => validationWarningOpenSet(false)}
+                    title="Not all fields are valid"
+                >
+                    You have not filled in all fields correctly. Please fix the
+                    following validation errors before saving:
+                    <ul>
+                        {Object.entries(localValue as object)
+                            .filter(
+                                ([key]) => !isValid(key as keyof T, localValue)
+                            )
+                            .map(([key]) => (
+                                <li key={key}>
+                                    {camelCaseToTitle(String(key))} -{' '}
+                                    {getInvalidMessages(key as keyof T)}
+                                </li>
+                            ))}
+                    </ul>
                 </InfoDialog>
             </DialogActions>
         </Dialog>
