@@ -129,6 +129,7 @@ export interface XMLFile {
     struct?: XMLStruct[];
     cluster: XMLCluster[];
     deviceType?: XMLDeviceType | XMLDeviceType[];
+    clusterExtension?: XMLClusterExtension | XMLClusterExtension[];
 }
 
 export interface XMLConfigurator {
@@ -189,7 +190,7 @@ export interface XMLCluster {
 }
 
 export interface XMLExtensionConfigurator {
-    clusterExtension: XMLClusterExtension;
+    clusterExtension: XMLClusterExtension | XMLClusterExtension[];
 }
 
 export interface XMLClusterExtension {

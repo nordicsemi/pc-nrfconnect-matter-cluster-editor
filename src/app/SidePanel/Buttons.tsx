@@ -17,8 +17,17 @@ import {
 
 import ClusterFile from '../Components/ClusterFile';
 import eventEmitter from '../Components/EventEmitter';
-import { XMLCluster, XMLDeviceType } from '../defines';
-import { validateClusterFile, ValidationError } from './FileValidation';
+import {
+    HexString,
+    XMLCluster,
+    XMLClusterExtension,
+    XMLDeviceType,
+} from '../defines';
+import {
+    validateClusterFile,
+    validateExtensionFile,
+    ValidationError,
+} from './FileValidation';
 import { MultipleEntriesDialog } from './MultipleEntriesDialog';
 import { SaveOptionsDialog } from './SaveOptionsDialog';
 import { ValidationErrorsDialog } from './ValidationErrorsDialog';
@@ -63,11 +72,16 @@ const OpenSavePanelButtons = () => {
         React.useState(false);
     const [multipleDeviceTypesOpen, setMultipleDeviceTypesOpen] =
         React.useState(false);
+    const [multipleExtensionsOpen, setMultipleExtensionsOpen] =
+        React.useState(false);
     const [localClustersList, setLocalClustersList] = React.useState<
         XMLCluster[]
     >([]);
     const [localDeviceTypesList, setLocalDeviceTypesList] = React.useState<
         XMLDeviceType[]
+    >([]);
+    const [localExtensionsList, setLocalExtensionsList] = React.useState<
+        XMLClusterExtension[]
     >([]);
     const [fileWarning, setFileWarning] = React.useState(false);
     const [fileWarningText, setFileWarningText] = React.useState('');
@@ -102,6 +116,41 @@ const OpenSavePanelButtons = () => {
                                         );
                                         setFileWarningTitle('Invalid file');
                                         logger.error('Invalid file', file.name);
+                                    } else {
+                                        // Validate the loaded extension file
+                                        const validationResult =
+                                            validateExtensionFile(
+                                                ClusterFile.extensionFile
+                                            );
+
+                                        // Check for validation errors
+                                        if (!validationResult.isValid) {
+                                            setValidationErrors(
+                                                validationResult.errors
+                                            );
+                                            setValidationErrorsOpen(true);
+                                            logger.error(
+                                                'Extension file validation errors:',
+                                                validationResult.errors
+                                            );
+                                            return;
+                                        }
+
+                                        // Handle multiple cluster extensions
+                                        if (
+                                            validationResult.hasMultipleExtensions
+                                        ) {
+                                            setLocalExtensionsList(
+                                                validationResult.extensions
+                                            );
+                                            setMultipleExtensionsOpen(true);
+                                        }
+                                        // Single extension is already initialized in loadExtension
+
+                                        dispatch({
+                                            type: 'LOAD_FILE',
+                                            payload: content,
+                                        });
                                     }
                                 }
                             );
@@ -258,6 +307,23 @@ const OpenSavePanelButtons = () => {
         setMultipleDeviceTypesOpen(false);
     };
 
+    const loadExtensionFromMultiple = (extension: XMLClusterExtension) => {
+        // Find the index of the selected extension in the validation results
+        const extensionIndex = localExtensionsList.findIndex(
+            ext => ext.$.code === extension.$.code
+        );
+        ClusterFile.initializeExtension(extension, extensionIndex);
+        setMultipleExtensionsOpen(false);
+    };
+
+    // Create display objects for extensions with name property for MultipleEntriesDialog
+    const extensionDisplayList = localExtensionsList.map((ext, index) => ({
+        ...ext,
+        name: `Extension ${index + 1} (Code: ${
+            ext.$.code instanceof HexString ? ext.$.code.toString() : ext.$.code
+        })`,
+    }));
+
     useHotKey({
         hotKey: 'ctrl+o',
         title: 'Load cluster or cluster extension',
@@ -329,6 +395,13 @@ const OpenSavePanelButtons = () => {
                 onLoad={loadDeviceTypeFromMultiple}
                 title="device type"
                 entries={localDeviceTypesList}
+            />
+            <MultipleEntriesDialog
+                isVisible={multipleExtensionsOpen}
+                onHide={() => setMultipleExtensionsOpen(false)}
+                onLoad={loadExtensionFromMultiple}
+                title="cluster extension"
+                entries={extensionDisplayList}
             />
             <ValidationErrorsDialog
                 isVisible={validationErrorsOpen}

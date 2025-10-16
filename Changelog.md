@@ -20,6 +20,9 @@
     being saved.
 -   Added dialog to choose save strategy: save only edited item or save all
     items with edits.
--   Improved UI for selecting items from multi-cluster/multi-device-type files.
+-   Improved UI for selecting items from
+    multi-cluster/multi-device-type/multi-extension files.
 -   Added field validation abstraction in edit boxes for reusable validation
     logic.
+-   Added "Clear All" button in Utility section to reset the editor to its
+    initial state.

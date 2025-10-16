@@ -16,6 +16,7 @@ import {
 
 import ClusterFile from '../Components/ClusterFile';
 import eventEmitter from '../Components/EventEmitter';
+import { SaveOptionsDialog } from './SaveOptionsDialog';
 
 /**
  * The ExtensionButtons component provides file management controls specifically for
@@ -44,9 +45,12 @@ const ExtensionButtons = () => {
     const [extensionWarningOpen, extensionWarningOpenSet] =
         React.useState(false);
     const [extensionWarningText, extensionWarningTextSet] = React.useState('');
+    const [saveOptionsOpen, setSaveOptionsOpen] = React.useState(false);
 
-    const openSaveExtensionFileWindow = () => {
-        const raw = ClusterFile.getSerializedClusterExtension();
+    const openSaveExtensionFileWindow = (saveWithOriginals = false) => {
+        const raw = saveWithOriginals
+            ? ClusterFile.getSerializedClusterExtensionWithOriginals()
+            : ClusterFile.getSerializedClusterExtension();
 
         if (raw === '') {
             extensionWarningTextSet(
@@ -93,7 +97,18 @@ const ExtensionButtons = () => {
         // Emit an event and wait 100ms for all listeners to finish
         // Before showing the window
         eventEmitter.emit('xmlInstanceSave');
-        setTimeout(openSaveExtensionFileWindow, 100);
+
+        // Check if file had multiple cluster extensions
+        const hasMultipleExtensions =
+            ClusterFile.originalClusterExtensions.length > 1;
+
+        if (hasMultipleExtensions) {
+            // Show dialog to choose save strategy
+            setTimeout(() => setSaveOptionsOpen(true), 100);
+        } else {
+            // Single extension or no original extensions, save directly
+            setTimeout(() => openSaveExtensionFileWindow(false), 100);
+        }
     };
 
     useHotKey({
@@ -134,6 +149,19 @@ const ExtensionButtons = () => {
             >
                 {extensionWarningText}
             </InfoDialog>
+            <SaveOptionsDialog
+                isVisible={saveOptionsOpen}
+                onHide={() => setSaveOptionsOpen(false)}
+                onSaveEditedOnly={() => {
+                    setSaveOptionsOpen(false);
+                    openSaveExtensionFileWindow(false);
+                }}
+                onSaveWithOriginals={() => {
+                    setSaveOptionsOpen(false);
+                    openSaveExtensionFileWindow(true);
+                }}
+                itemType="clusterExtension"
+            />
         </div>
     );
 };

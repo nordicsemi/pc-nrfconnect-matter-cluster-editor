@@ -35,10 +35,12 @@ export const resetClusterFileState = (): void => {
     // Clear original data arrays
     ClusterFile.originalClusters = [];
     ClusterFile.originalDeviceTypes = [];
+    ClusterFile.originalClusterExtensions = [];
 
     // Reset editing indices
     ClusterFile.editingClusterIndex = -1;
     ClusterFile.editingDeviceTypeIndex = -1;
+    ClusterFile.editingExtensionIndex = -1;
 
     // Clear extension flag
     ClusterFile.loadedClusterExtension = false;

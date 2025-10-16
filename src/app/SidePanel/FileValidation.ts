@@ -7,8 +7,10 @@
 import {
     HexString,
     XMLCluster,
+    XMLClusterExtension,
     XMLConfigurator,
     XMLDeviceType,
+    XMLExtensionConfigurator,
     XMLFile,
 } from '../defines';
 
@@ -32,6 +34,13 @@ export interface SaveValidationResult {
     shouldSaveDeviceType: boolean;
     isValid: boolean;
     errors: ValidationError[];
+}
+
+export interface ExtensionFileValidationResult {
+    isValid: boolean;
+    errors: ValidationError[];
+    hasMultipleExtensions: boolean;
+    extensions: XMLClusterExtension[];
 }
 
 /**
@@ -89,19 +98,25 @@ function hasNonDefaultDeviceTypeValues(deviceType: XMLDeviceType): boolean {
     const hasClass = deviceType.class && deviceType.class !== '';
     const hasScope = deviceType.scope && deviceType.scope !== '';
 
-    // Check deviceId
-    const hasDeviceId =
-        deviceType.deviceId &&
-        deviceType.deviceId._ &&
-        deviceType.deviceId._ instanceof HexString &&
-        deviceType.deviceId._.toNumber() !== 0;
+    // Check deviceId (can be structured object with _ property or bare HexString)
+    let hasDeviceId = false;
+    if (deviceType.deviceId) {
+        if (deviceType.deviceId._ instanceof HexString) {
+            hasDeviceId = deviceType.deviceId._.toNumber() !== 0;
+        } else if (deviceType.deviceId instanceof HexString) {
+            hasDeviceId = (deviceType.deviceId as HexString).toNumber() !== 0;
+        }
+    }
 
-    // Check profileId
-    const hasProfileId =
-        deviceType.profileId &&
-        deviceType.profileId._ &&
-        deviceType.profileId._ instanceof HexString &&
-        deviceType.profileId._.toNumber() !== 0;
+    // Check profileId (can be structured object with _ property or bare HexString)
+    let hasProfileId = false;
+    if (deviceType.profileId) {
+        if (deviceType.profileId._ instanceof HexString) {
+            hasProfileId = deviceType.profileId._.toNumber() !== 0;
+        } else if (deviceType.profileId instanceof HexString) {
+            hasProfileId = (deviceType.profileId as HexString).toNumber() !== 0;
+        }
+    }
 
     // ALL required fields must have non-default values
     return !!(
@@ -319,14 +334,17 @@ function validateDeviceType(
             path: basePath,
             field: 'deviceId',
         });
-    } else if (
-        typeof deviceType.deviceId === 'object' &&
-        !deviceType.deviceId._
-    ) {
-        errors.push({
-            path: basePath,
-            field: 'deviceId',
-        });
+    } else if (typeof deviceType.deviceId === 'object') {
+        // deviceId can be structured object with _ property or bare HexString
+        const isStructured = deviceType.deviceId._ instanceof HexString;
+        const isBareHexString = deviceType.deviceId instanceof HexString;
+
+        if (!isStructured && !isBareHexString) {
+            errors.push({
+                path: basePath,
+                field: 'deviceId',
+            });
+        }
     }
 
     if (!deviceType.profileId) {
@@ -334,14 +352,17 @@ function validateDeviceType(
             path: basePath,
             field: 'profileId',
         });
-    } else if (
-        typeof deviceType.profileId === 'object' &&
-        !deviceType.profileId._
-    ) {
-        errors.push({
-            path: basePath,
-            field: 'profileId',
-        });
+    } else if (typeof deviceType.profileId === 'object') {
+        // profileId can be structured object with _ property or bare HexString
+        const isStructured = deviceType.profileId._ instanceof HexString;
+        const isBareHexString = deviceType.profileId instanceof HexString;
+
+        if (!isStructured && !isBareHexString) {
+            errors.push({
+                path: basePath,
+                field: 'profileId',
+            });
+        }
     }
 
     if (!deviceType.class || deviceType.class.trim() === '') {
@@ -524,5 +545,79 @@ export function validateForSave(
         shouldSaveDeviceType,
         isValid: errors.length === 0,
         errors,
+    };
+}
+
+/**
+ * Validates a cluster extension file and detects multiple cluster extensions.
+ *
+ * This function processes extension files to:
+ * - Check if the file contains at least one cluster extension
+ * - Detect if multiple cluster extensions are present
+ * - Validate each cluster extension has required fields
+ *
+ * @param {XMLExtensionConfigurator} extensionFile - The parsed extension file
+ * @returns {ExtensionFileValidationResult} - Validation result with extension list and multi-extension flag
+ */
+export function validateExtensionFile(
+    extensionFile: XMLExtensionConfigurator
+): ExtensionFileValidationResult {
+    const errors: ValidationError[] = [];
+    let extensions: XMLClusterExtension[] = [];
+    let hasMultipleExtensions = false;
+
+    // Check for cluster extensions
+    if (!extensionFile.clusterExtension) {
+        errors.push({
+            path: 'root',
+            field: 'clusterExtension',
+            message:
+                'Extension file must contain at least one cluster extension',
+        });
+
+        return {
+            isValid: false,
+            errors,
+            hasMultipleExtensions: false,
+            extensions: [],
+        };
+    }
+
+    // Handle multiple cluster extensions
+    if (Array.isArray(extensionFile.clusterExtension)) {
+        extensions = extensionFile.clusterExtension;
+        hasMultipleExtensions = extensionFile.clusterExtension.length > 1;
+
+        // Validate each extension has a code
+        extensionFile.clusterExtension.forEach((extension, index) => {
+            if (!extension.$ || !extension.$.code) {
+                errors.push({
+                    path: `cluster extension ${index + 1}`,
+                    field: 'code',
+                    message: 'Cluster extension must have a code',
+                });
+            }
+        });
+    } else {
+        // Single cluster extension
+        extensions = [extensionFile.clusterExtension];
+
+        if (
+            !extensionFile.clusterExtension.$ ||
+            !extensionFile.clusterExtension.$.code
+        ) {
+            errors.push({
+                path: 'cluster extension',
+                field: 'code',
+                message: 'Cluster extension must have a code',
+            });
+        }
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors,
+        hasMultipleExtensions,
+        extensions,
     };
 }

@@ -13,6 +13,7 @@ import {
     HexString,
     XMLAttribute,
     XMLCluster,
+    XMLClusterExtension,
     XMLCommand,
     XMLConfigurator,
     XMLDeviceType,
@@ -73,8 +74,10 @@ class ClusterFile {
     static content: string;
     static originalClusters: XMLCluster[] = [];
     static originalDeviceTypes: XMLDeviceType[] = [];
+    static originalClusterExtensions: XMLClusterExtension[] = [];
     static editingClusterIndex = -1;
     static editingDeviceTypeIndex = -1;
+    static editingExtensionIndex = -1;
 
     /**
      * The current instance of the cluster file.
@@ -255,49 +258,26 @@ class ClusterFile {
             if (!this.extensionFile.clusterExtension) {
                 return false;
             }
-            // Clear XMLCurrentInstance and XMLBaseInstance
-            this.XMLCurrentInstance = {
-                cluster: {
-                    domain: '',
-                    name: 'Cluster Extension',
-                    code: new HexString(0),
-                    define: '',
-                    description: '',
-                },
-            };
 
-            this.XMLBaseInstance = {
-                cluster: {
-                    domain: '',
-                    name: 'Cluster Extension',
-                    code: new HexString(0),
-                    define: '',
-                    description: '',
-                },
-            };
-
-            // Copy extension attributes, commands and events
-            this.XMLCurrentInstance.cluster.code = this.extensionFile
-                .clusterExtension.$.code as HexString;
-
-            if (this.extensionFile.clusterExtension.attribute) {
-                this.XMLCurrentInstance.cluster.attribute =
-                    this.extensionFile.clusterExtension.attribute;
+            // Store original cluster extensions
+            if (Array.isArray(this.extensionFile.clusterExtension)) {
+                this.originalClusterExtensions =
+                    this.extensionFile.clusterExtension;
+            } else {
+                this.originalClusterExtensions = [
+                    this.extensionFile.clusterExtension,
+                ];
             }
 
-            if (this.extensionFile.clusterExtension.command) {
-                this.XMLCurrentInstance.cluster.command =
-                    this.extensionFile.clusterExtension.command;
+            // Reset editing index
+            this.editingExtensionIndex = -1;
+
+            // If single extension, initialize it directly
+            if (this.originalClusterExtensions.length === 1) {
+                this.initializeExtension(this.originalClusterExtensions[0], 0);
             }
-
-            if (this.extensionFile.clusterExtension.event) {
-                this.XMLCurrentInstance.cluster.event =
-                    this.extensionFile.clusterExtension.event;
-            }
-
-            this.loadedClusterExtension = true;
-
-            eventEmitter.emit('xmlInstanceChanged');
+            // If multiple extensions, caller needs to handle selection
+            // Don't initialize here, let Buttons.tsx show the selection dialog
 
             telemetry.sendEvent('Loaded cluster exension file');
             logger.info('Loaded cluster extension file:', fileUrl.name);
@@ -309,6 +289,66 @@ class ClusterFile {
             logger.error('Error parsing XML:', error);
             return false;
         }
+    }
+
+    /**
+     * Initializes a specific cluster extension from multiple extensions.
+     *
+     * This function sets up the XMLCurrentInstance and XMLBaseInstance with the selected
+     * cluster extension's attributes, commands, and events. It is called either automatically
+     * when a single extension is loaded, or manually after the user selects an extension
+     * from multiple available extensions.
+     *
+     * @function ClusterFile.initializeExtension
+     * @param {XMLClusterExtension} extension - The cluster extension to initialize
+     * @param {number} extensionIndex - The index of the extension in the original array
+     * @returns {void}
+     */
+    static initializeExtension(
+        extension: XMLClusterExtension,
+        extensionIndex = 0
+    ) {
+        this.editingExtensionIndex = extensionIndex;
+
+        // Clear XMLCurrentInstance and XMLBaseInstance
+        this.XMLCurrentInstance = {
+            cluster: {
+                domain: '',
+                name: 'Cluster Extension',
+                code: new HexString(0),
+                define: '',
+                description: '',
+            },
+        };
+
+        this.XMLBaseInstance = {
+            cluster: {
+                domain: '',
+                name: 'Cluster Extension',
+                code: new HexString(0),
+                define: '',
+                description: '',
+            },
+        };
+
+        // Copy extension attributes, commands and events
+        this.XMLCurrentInstance.cluster.code = extension.$.code as HexString;
+
+        if (extension.attribute) {
+            this.XMLCurrentInstance.cluster.attribute = extension.attribute;
+        }
+
+        if (extension.command) {
+            this.XMLCurrentInstance.cluster.command = extension.command;
+        }
+
+        if (extension.event) {
+            this.XMLCurrentInstance.cluster.event = extension.event;
+        }
+
+        this.loadedClusterExtension = true;
+
+        eventEmitter.emit('xmlInstanceChanged');
     }
 
     /**
@@ -726,19 +766,89 @@ class ClusterFile {
             return '';
         }
 
-        const clusterExtensionInstance: XMLExtensionConfigurator = {
-            clusterExtension: {
-                $: { code: this.XMLCurrentInstance.cluster.code.toString() },
-            },
+        const clusterExtensionObject: XMLClusterExtension = {
+            $: { code: this.XMLCurrentInstance.cluster.code.toString() },
         };
 
-        clusterExtensionInstance.clusterExtension.$.code =
+        clusterExtensionObject.$.code =
             this.XMLCurrentInstance.cluster.code.toString();
-        clusterExtensionInstance.clusterExtension.attribute = newAttributes;
-        clusterExtensionInstance.clusterExtension.command = newCommands;
-        clusterExtensionInstance.clusterExtension.event = newEvents;
-        clusterExtensionInstance.clusterExtension.deviceType =
-            newDeviceType as XMLDeviceType;
+        clusterExtensionObject.attribute = newAttributes;
+        clusterExtensionObject.command = newCommands;
+        clusterExtensionObject.event = newEvents;
+        clusterExtensionObject.deviceType = newDeviceType as XMLDeviceType;
+
+        const clusterExtensionInstance: XMLExtensionConfigurator = {
+            clusterExtension: clusterExtensionObject,
+        };
+
+        // Send telemetry about what was saved
+        this.sendClusterExtensionSaveMetrics(
+            newAttributes || [],
+            newCommands || [],
+            newEvents || [],
+            newDeviceType || ''
+        );
+
+        return serializeClusterXML(clusterExtensionInstance);
+    }
+
+    /**
+     * Gets the serialized cluster extension XML with original extensions preserved.
+     *
+     * This method is used when a file originally contained multiple cluster extensions
+     * and the user wants to save all of them (with edits applied to the one being edited).
+     * It merges the current edited extension back into the original extensions array.
+     *
+     * @function ClusterFile.getSerializedClusterExtensionWithOriginals
+     * @returns {string} - The serialized XML string with all extensions
+     */
+    static getSerializedClusterExtensionWithOriginals(): string {
+        const newAttributes = this.getNewAttributes();
+        const newCommands = this.getNewCommands();
+        const newEvents = this.getNewEvents();
+        const newDeviceType = this.getNewDeviceType();
+
+        if (
+            newAttributes?.length === 0 &&
+            newCommands?.length === 0 &&
+            newEvents?.length === 0 &&
+            newDeviceType === null
+        ) {
+            return '';
+        }
+
+        // Create the edited extension object
+        const editedExtension: XMLClusterExtension = {
+            $: { code: this.XMLCurrentInstance.cluster.code.toString() },
+        };
+
+        editedExtension.$.code =
+            this.XMLCurrentInstance.cluster.code.toString();
+        editedExtension.attribute = newAttributes;
+        editedExtension.command = newCommands;
+        editedExtension.event = newEvents;
+        editedExtension.deviceType = newDeviceType as XMLDeviceType;
+
+        // Clone original extensions array
+        const extensionsToSave = [...this.originalClusterExtensions];
+
+        // Replace the edited extension at its index
+        if (
+            this.editingExtensionIndex >= 0 &&
+            this.editingExtensionIndex < extensionsToSave.length
+        ) {
+            extensionsToSave[this.editingExtensionIndex] = editedExtension;
+        } else {
+            // If index is invalid, just add it to the array
+            extensionsToSave.push(editedExtension);
+        }
+
+        const clusterExtensionInstance: XMLExtensionConfigurator = {
+            clusterExtension:
+                extensionsToSave.length === 1
+                    ? extensionsToSave[0]
+                    : extensionsToSave,
+        };
 
         // Send telemetry about what was saved
         this.sendClusterExtensionSaveMetrics(
@@ -829,18 +939,26 @@ class ClusterFile {
         }
 
         // Preserve enums and structs
-        if (
-            this.XMLCurrentInstance.enum &&
-            this.XMLCurrentInstance.enum.length > 0
-        ) {
-            xmlFile.enum = this.XMLCurrentInstance.enum;
+        if (this.XMLCurrentInstance.enum) {
+            // enum can be a single object or an array
+            if (Array.isArray(this.XMLCurrentInstance.enum)) {
+                if (this.XMLCurrentInstance.enum.length > 0) {
+                    xmlFile.enum = this.XMLCurrentInstance.enum;
+                }
+            } else {
+                xmlFile.enum = this.XMLCurrentInstance.enum;
+            }
         }
 
-        if (
-            this.XMLCurrentInstance.struct &&
-            this.XMLCurrentInstance.struct.length > 0
-        ) {
-            xmlFile.struct = this.XMLCurrentInstance.struct;
+        if (this.XMLCurrentInstance.struct) {
+            // struct can be a single object or an array
+            if (Array.isArray(this.XMLCurrentInstance.struct)) {
+                if (this.XMLCurrentInstance.struct.length > 0) {
+                    xmlFile.struct = this.XMLCurrentInstance.struct;
+                }
+            } else {
+                xmlFile.struct = this.XMLCurrentInstance.struct;
+            }
         }
 
         // Persist clusterExtension if present (prefer current instance, fallback to original file)
@@ -917,18 +1035,26 @@ class ClusterFile {
         }
 
         // Preserve enums and structs
-        if (
-            this.XMLCurrentInstance.enum &&
-            this.XMLCurrentInstance.enum.length > 0
-        ) {
-            xmlFile.enum = this.XMLCurrentInstance.enum;
+        if (this.XMLCurrentInstance.enum) {
+            // enum can be a single object or an array
+            if (Array.isArray(this.XMLCurrentInstance.enum)) {
+                if (this.XMLCurrentInstance.enum.length > 0) {
+                    xmlFile.enum = this.XMLCurrentInstance.enum;
+                }
+            } else {
+                xmlFile.enum = this.XMLCurrentInstance.enum;
+            }
         }
 
-        if (
-            this.XMLCurrentInstance.struct &&
-            this.XMLCurrentInstance.struct.length > 0
-        ) {
-            xmlFile.struct = this.XMLCurrentInstance.struct;
+        if (this.XMLCurrentInstance.struct) {
+            // struct can be a single object or an array
+            if (Array.isArray(this.XMLCurrentInstance.struct)) {
+                if (this.XMLCurrentInstance.struct.length > 0) {
+                    xmlFile.struct = this.XMLCurrentInstance.struct;
+                }
+            } else {
+                xmlFile.struct = this.XMLCurrentInstance.struct;
+            }
         }
 
         // Persist clusterExtension if present

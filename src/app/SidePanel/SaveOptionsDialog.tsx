@@ -16,15 +16,16 @@ interface SaveOptionsDialogProps {
     onHide: () => void;
     onSaveEditedOnly: () => void;
     onSaveWithOriginals: () => void;
-    itemType: 'cluster' | 'deviceType';
+    itemType: 'cluster' | 'deviceType' | 'clusterExtension';
 }
 
 /**
  * Dialog component for choosing save strategy when file has multiple items.
  *
- * When a file contains multiple clusters or device types and the user has edited
- * only one of them, this dialog allows them to choose whether to save only the
- * edited item or save all items from the original file with their edits.
+ * When a file contains multiple clusters, device types, or cluster extensions
+ * and the user has edited only one of them, this dialog allows them to choose
+ * whether to save only the edited item or save all items from the original
+ * file with their edits.
  *
  * @function SaveOptionsDialog
  * @param {SaveOptionsDialogProps} props - Component props
@@ -32,7 +33,7 @@ interface SaveOptionsDialogProps {
  * @param {function} props.onHide - Callback when dialog is closed
  * @param {function} props.onSaveEditedOnly - Callback when user chooses to save only edited item
  * @param {function} props.onSaveWithOriginals - Callback when user chooses to save all original items with edits
- * @param {string} props.itemType - Type of items ('cluster' or 'deviceType')
+ * @param {string} props.itemType - Type of items ('cluster', 'deviceType', or 'clusterExtension')
  * @returns {JSX.Element} - The rendered save options dialog
  */
 export const SaveOptionsDialog = ({
@@ -42,8 +43,23 @@ export const SaveOptionsDialog = ({
     onSaveWithOriginals,
     itemType,
 }: SaveOptionsDialogProps) => {
-    const itemTypeLabel = itemType === 'cluster' ? 'cluster' : 'device type';
-    const itemTypePlural = itemType === 'cluster' ? 'clusters' : 'device types';
+    let itemTypeLabel: string;
+    let itemTypePlural: string;
+
+    switch (itemType) {
+        case 'cluster':
+            itemTypeLabel = 'cluster';
+            itemTypePlural = 'clusters';
+            break;
+        case 'deviceType':
+            itemTypeLabel = 'device type';
+            itemTypePlural = 'device types';
+            break;
+        default:
+            itemTypeLabel = 'cluster extension';
+            itemTypePlural = 'cluster extensions';
+            break;
+    }
 
     return (
         <InfoDialog
