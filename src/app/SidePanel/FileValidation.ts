@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-4-Clause
  */
 
-import { XMLCluster, XMLDeviceType, XMLFile } from '../defines';
+import {
+    HexString,
+    XMLCluster,
+    XMLConfigurator,
+    XMLDeviceType,
+    XMLFile,
+} from '../defines';
 
 export interface ValidationError {
     path: string;
@@ -19,6 +25,94 @@ export interface FileValidationResult {
     hasMultipleDeviceTypes: boolean;
     clusters: XMLCluster[];
     deviceTypes: XMLDeviceType[];
+}
+
+export interface SaveValidationResult {
+    shouldSaveCluster: boolean;
+    shouldSaveDeviceType: boolean;
+    isValid: boolean;
+    errors: ValidationError[];
+}
+
+/**
+ * Checks if a cluster has all required fields with non-default values.
+ * Used to determine if a cluster should be included in the saved file.
+ *
+ * A cluster is considered valid for saving only if ALL required fields
+ * (name, code, define, domain) have non-default values. This prevents
+ * partial/incomplete clusters from being validated and saved.
+ *
+ * @function hasNonDefaultClusterValues
+ * @param {XMLCluster} cluster - The cluster to check
+ * @returns {boolean} - True if cluster has ALL required fields with non-default values, false otherwise
+ */
+function hasNonDefaultClusterValues(cluster: XMLCluster): boolean {
+    if (!cluster) {
+        return false;
+    }
+
+    // Check if ALL required fields have non-default values
+    // If any required field is missing/default, the cluster should not be saved
+    const hasName = cluster.name && cluster.name !== '';
+    const hasDefine = cluster.define && cluster.define !== '';
+    const hasDomain = cluster.domain && cluster.domain !== '';
+    const hasCode =
+        cluster.code &&
+        cluster.code instanceof HexString &&
+        cluster.code.toNumber() !== 0;
+
+    // ALL required fields must have non-default values
+    return !!(hasName && hasDefine && hasDomain && hasCode);
+}
+
+/**
+ * Checks if a device type has all required fields with non-default values.
+ * Used to determine if a device type should be included in the saved file.
+ *
+ * A device type is considered valid for saving only if ALL required fields
+ * have non-default values. This prevents partial/incomplete device types
+ * from being validated and saved.
+ *
+ * @function hasNonDefaultDeviceTypeValues
+ * @param {XMLDeviceType} deviceType - The device type to check
+ * @returns {boolean} - True if device type has ALL required fields with non-default values, false otherwise
+ */
+function hasNonDefaultDeviceTypeValues(deviceType: XMLDeviceType): boolean {
+    if (!deviceType) {
+        return false;
+    }
+
+    // Check if ALL required fields have non-default values
+    const hasName = deviceType.name && deviceType.name !== '';
+    const hasTypeName = deviceType.typeName && deviceType.typeName !== '';
+    const hasDomain = deviceType.domain && deviceType.domain !== '';
+    const hasClass = deviceType.class && deviceType.class !== '';
+    const hasScope = deviceType.scope && deviceType.scope !== '';
+
+    // Check deviceId
+    const hasDeviceId =
+        deviceType.deviceId &&
+        deviceType.deviceId._ &&
+        deviceType.deviceId._ instanceof HexString &&
+        deviceType.deviceId._.toNumber() !== 0;
+
+    // Check profileId
+    const hasProfileId =
+        deviceType.profileId &&
+        deviceType.profileId._ &&
+        deviceType.profileId._ instanceof HexString &&
+        deviceType.profileId._.toNumber() !== 0;
+
+    // ALL required fields must have non-default values
+    return !!(
+        hasName &&
+        hasTypeName &&
+        hasDomain &&
+        hasClass &&
+        hasScope &&
+        hasDeviceId &&
+        hasProfileId
+    );
 }
 
 /**
@@ -371,4 +465,64 @@ export function formatValidationErrors(errors: ValidationError[]): string {
     return `The following required fields are missing or invalid:${errorMessages.join(
         '\n'
     )}`;
+}
+
+/**
+ * Validates the current instance before saving.
+ * Checks if cluster/device type have non-default values and validates their required fields.
+ *
+ * @function validateForSave
+ * @param {XMLConfigurator} currentInstance - The current XML instance to validate
+ * @returns {SaveValidationResult} - Validation result with save flags and errors
+ */
+export function validateForSave(
+    currentInstance: XMLConfigurator
+): SaveValidationResult {
+    const errors: ValidationError[] = [];
+    let shouldSaveCluster = false;
+    let shouldSaveDeviceType = false;
+
+    // Check if cluster has non-default values
+    if (currentInstance.cluster) {
+        shouldSaveCluster = hasNonDefaultClusterValues(currentInstance.cluster);
+
+        // If cluster has some values, validate them
+        if (shouldSaveCluster) {
+            const clusterErrors = validateCluster(currentInstance.cluster, 0);
+            errors.push(...clusterErrors);
+        }
+    }
+
+    // Check if device type has non-default values
+    if (currentInstance.deviceType) {
+        shouldSaveDeviceType = hasNonDefaultDeviceTypeValues(
+            currentInstance.deviceType
+        );
+
+        // If device type has some values, validate them
+        if (shouldSaveDeviceType) {
+            const deviceTypeErrors = validateDeviceType(
+                currentInstance.deviceType,
+                0
+            );
+            errors.push(...deviceTypeErrors);
+        }
+    }
+
+    // At least one must have non-default values
+    if (!shouldSaveCluster && !shouldSaveDeviceType) {
+        errors.push({
+            path: 'root',
+            field: 'cluster/deviceType',
+            message:
+                'No data to save. Both cluster and device type have default values.',
+        });
+    }
+
+    return {
+        shouldSaveCluster,
+        shouldSaveDeviceType,
+        isValid: errors.length === 0,
+        errors,
+    };
 }

@@ -22,6 +22,7 @@ import {
     XMLFile,
     XMLStruct,
 } from '../defines';
+import { validateForSave } from '../SidePanel/FileValidation';
 import { parseClusterXML, serializeClusterXML } from '../xmlClusterParser';
 import eventEmitter from './EventEmitter';
 import { deepClone } from './Utils';
@@ -70,6 +71,10 @@ class ClusterFile {
     static fileName: string;
     static fileUrl: File;
     static content: string;
+    static originalClusters: XMLCluster[] = [];
+    static originalDeviceTypes: XMLDeviceType[] = [];
+    static editingClusterIndex = -1;
+    static editingDeviceTypeIndex = -1;
 
     /**
      * The current instance of the cluster file.
@@ -161,6 +166,28 @@ class ClusterFile {
             logger.info('Loaded cluster file:', fileUrl.name);
             telemetry.sendEvent('Loaded cluster file');
             this.loadedClusterExtension = false;
+
+            // Store original clusters and device types for preservation
+            if (this.file.cluster) {
+                this.originalClusters = Array.isArray(this.file.cluster)
+                    ? [...this.file.cluster]
+                    : [this.file.cluster];
+            } else {
+                this.originalClusters = [];
+            }
+
+            if (this.file.deviceType) {
+                this.originalDeviceTypes = Array.isArray(this.file.deviceType)
+                    ? [...this.file.deviceType]
+                    : [this.file.deviceType];
+            } else {
+                this.originalDeviceTypes = [];
+            }
+
+            // Reset editing indices
+            this.editingClusterIndex = -1;
+            this.editingDeviceTypeIndex = -1;
+
             return (
                 Array.isArray(this.file.cluster) ||
                 this.file.cluster !== undefined ||
@@ -292,9 +319,11 @@ class ClusterFile {
      *
      * @function ClusterFile.initialize
      * @param {XMLCluster} xmlCluster - The cluster to be added to the XMLCurrentInstance.
+     * @param {number} clusterIndex - The index of the cluster being edited (default: 0)
      * @returns {void}
      */
-    static initialize(xmlCluster: XMLCluster) {
+    static initialize(xmlCluster: XMLCluster, clusterIndex = 0) {
+        this.editingClusterIndex = clusterIndex;
         // Reset XMLCurrentInstance to clean state
         this.XMLCurrentInstance = JSON.parse(
             JSON.stringify(defaultXMLConfigurator)
@@ -758,33 +787,60 @@ class ClusterFile {
     /**
      * Gets the serialized cluster.
      *
-     * This function returns the serialized cluster.
+     * This function validates the current instance and returns the serialized cluster.
+     * Only includes cluster and device type if they have non-default values.
      *
      * @function ClusterFile.getSerializedCluster
-     * @returns {string} The serialized cluster.
+     * @returns {object} Object with either {error: false, xml: string} or {error: true, validationErrors: array} or {error: true, message: string}
      */
-    static getSerializedCluster() {
-        // Always serialize the fully loaded/initialized content, not only diffs,
-        // so that enums and structs are preserved even without modifications.
+    static getSerializedCluster(): any {
         const xmlFile: any = {} as any;
 
-        if (this.XMLCurrentInstance.cluster) {
+        // Validate before save
+        const validation = validateForSave(this.XMLCurrentInstance);
+
+        if (!validation.isValid) {
+            // Return validation errors to caller
+            return { error: true, validationErrors: validation.errors };
+        }
+
+        if (!validation.shouldSaveCluster && !validation.shouldSaveDeviceType) {
+            return {
+                error: true,
+                message:
+                    'No valid data to save. Both cluster and device type have default values.',
+            };
+        }
+
+        // Include cluster only if it has non-default values
+        if (validation.shouldSaveCluster && this.XMLCurrentInstance.cluster) {
             xmlFile.cluster = [
                 this.XMLCurrentInstance.cluster as unknown as XMLCluster,
             ];
         }
 
-        if (this.XMLCurrentInstance.enum) {
+        // Include device type only if it has non-default values
+        if (
+            validation.shouldSaveDeviceType &&
+            this.XMLCurrentInstance.deviceType
+        ) {
+            xmlFile.deviceType = this.XMLCurrentInstance
+                .deviceType as XMLDeviceType;
+        }
+
+        // Preserve enums and structs
+        if (
+            this.XMLCurrentInstance.enum &&
+            this.XMLCurrentInstance.enum.length > 0
+        ) {
             xmlFile.enum = this.XMLCurrentInstance.enum;
         }
 
-        if (this.XMLCurrentInstance.struct) {
+        if (
+            this.XMLCurrentInstance.struct &&
+            this.XMLCurrentInstance.struct.length > 0
+        ) {
             xmlFile.struct = this.XMLCurrentInstance.struct;
-        }
-
-        if (this.XMLCurrentInstance.deviceType !== undefined) {
-            xmlFile.deviceType = this.XMLCurrentInstance
-                .deviceType as XMLDeviceType;
         }
 
         // Persist clusterExtension if present (prefer current instance, fallback to original file)
@@ -797,14 +853,103 @@ class ClusterFile {
 
         // Send telemetry about what was saved
         this.sendClusterSaveMetrics(
-            this.XMLCurrentInstance.cluster,
+            validation.shouldSaveCluster
+                ? this.XMLCurrentInstance.cluster
+                : undefined,
             this.XMLCurrentInstance.enum,
             this.XMLCurrentInstance.struct,
-            this.XMLCurrentInstance.deviceType !== undefined,
+            validation.shouldSaveDeviceType,
             !!(currentExt || originalExt)
         );
 
-        return serializeClusterXML(xmlFile);
+        return { error: false, xml: serializeClusterXML(xmlFile) };
+    }
+
+    /**
+     * Gets the serialized cluster with all original items preserved.
+     *
+     * This function validates the current instance and returns the serialized cluster
+     * with all original clusters and device types, replacing only the edited one.
+     *
+     * @function ClusterFile.getSerializedClusterWithOriginals
+     * @returns {object} Object with either {error: false, xml: string} or {error: true, validationErrors: array}
+     */
+    static getSerializedClusterWithOriginals(): any {
+        const xmlFile: any = {} as any;
+
+        // Validate current edits
+        const validation = validateForSave(this.XMLCurrentInstance);
+        if (!validation.isValid) {
+            return { error: true, validationErrors: validation.errors };
+        }
+
+        // Build clusters array
+        if (this.originalClusters.length > 0) {
+            xmlFile.cluster = [...this.originalClusters];
+            // Replace the edited cluster if it has non-default values
+            if (this.editingClusterIndex >= 0 && validation.shouldSaveCluster) {
+                xmlFile.cluster[this.editingClusterIndex] =
+                    this.XMLCurrentInstance.cluster;
+            }
+        } else if (validation.shouldSaveCluster) {
+            xmlFile.cluster = [this.XMLCurrentInstance.cluster];
+        }
+
+        // Build device types array
+        if (this.originalDeviceTypes.length > 1) {
+            xmlFile.deviceType = [...this.originalDeviceTypes];
+            // Replace the edited device type if it has non-default values
+            if (
+                this.editingDeviceTypeIndex >= 0 &&
+                validation.shouldSaveDeviceType
+            ) {
+                xmlFile.deviceType[this.editingDeviceTypeIndex] =
+                    this.XMLCurrentInstance.deviceType;
+            }
+        } else if (this.originalDeviceTypes.length === 1) {
+            // Single device type
+            if (validation.shouldSaveDeviceType) {
+                xmlFile.deviceType = this.XMLCurrentInstance.deviceType;
+            }
+        } else if (validation.shouldSaveDeviceType) {
+            // No original device types, but current has valid data
+            xmlFile.deviceType = this.XMLCurrentInstance.deviceType;
+        }
+
+        // Preserve enums and structs
+        if (
+            this.XMLCurrentInstance.enum &&
+            this.XMLCurrentInstance.enum.length > 0
+        ) {
+            xmlFile.enum = this.XMLCurrentInstance.enum;
+        }
+
+        if (
+            this.XMLCurrentInstance.struct &&
+            this.XMLCurrentInstance.struct.length > 0
+        ) {
+            xmlFile.struct = this.XMLCurrentInstance.struct;
+        }
+
+        // Persist clusterExtension if present
+        const currentExt = (this.XMLCurrentInstance as any)?.clusterExtension;
+        const originalExt = (this.file as any)?.clusterExtension;
+        if (currentExt || originalExt) {
+            xmlFile.clusterExtension = currentExt || originalExt;
+        }
+
+        // Send telemetry about what was saved
+        this.sendClusterSaveMetrics(
+            validation.shouldSaveCluster
+                ? this.XMLCurrentInstance.cluster
+                : undefined,
+            this.XMLCurrentInstance.enum,
+            this.XMLCurrentInstance.struct,
+            validation.shouldSaveDeviceType,
+            !!(currentExt || originalExt)
+        );
+
+        return { error: false, xml: serializeClusterXML(xmlFile) };
     }
 }
 

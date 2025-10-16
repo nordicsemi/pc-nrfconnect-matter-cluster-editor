@@ -20,6 +20,7 @@ import eventEmitter from '../Components/EventEmitter';
 import { XMLCluster, XMLDeviceType } from '../defines';
 import { validateClusterFile, ValidationError } from './FileValidation';
 import { MultipleEntriesDialog } from './MultipleEntriesDialog';
+import { SaveOptionsDialog } from './SaveOptionsDialog';
 import { ValidationErrorsDialog } from './ValidationErrorsDialog';
 
 import '../../../resources/css/component.scss';
@@ -76,6 +77,7 @@ const OpenSavePanelButtons = () => {
     >([]);
     const [validationErrorsOpen, setValidationErrorsOpen] =
         React.useState(false);
+    const [saveOptionsOpen, setSaveOptionsOpen] = React.useState(false);
 
     const handleLoad = () => {
         const input = document.createElement('input');
@@ -164,10 +166,30 @@ const OpenSavePanelButtons = () => {
         input.click();
     };
 
-    const openSaveAllFileWindow = () => {
-        const content = ClusterFile.getSerializedCluster();
+    const openSaveAllFileWindow = (saveWithOriginals = false) => {
+        const result = saveWithOriginals
+            ? ClusterFile.getSerializedClusterWithOriginals()
+            : ClusterFile.getSerializedCluster();
 
-        if (content === '') {
+        if (result.error) {
+            if (result.validationErrors) {
+                setValidationErrors(result.validationErrors);
+                setValidationErrorsOpen(true);
+                logger.error(
+                    'Validation errors during save:',
+                    result.validationErrors
+                );
+            } else {
+                setFileWarning(true);
+                setFileWarningText(result.message || 'Failed to save');
+                setFileWarningTitle('Save Error');
+                logger.error('Save error:', result.message);
+            }
+            return;
+        }
+
+        const content = result.xml;
+        if (!content || content === '') {
             setFileWarning(true);
             setFileWarningText('No data to be saved.');
             setFileWarningTitle('No data');
@@ -199,17 +221,38 @@ const OpenSavePanelButtons = () => {
                 'Tried to save a cluster, while cluster extension has been loaded'
             );
         } else {
-            eventEmitter.emit('xmlInstanceSave');
-            setTimeout(openSaveAllFileWindow, 100);
+            // Check if file had multiple clusters or device types
+            const hasMultipleItems =
+                ClusterFile.originalClusters.length > 1 ||
+                ClusterFile.originalDeviceTypes.length > 1;
+
+            if (hasMultipleItems) {
+                // Show dialog to choose save strategy
+                eventEmitter.emit('xmlInstanceSave');
+                setTimeout(() => setSaveOptionsOpen(true), 100);
+            } else {
+                // Single item or no original items, save directly
+                eventEmitter.emit('xmlInstanceSave');
+                setTimeout(() => openSaveAllFileWindow(false), 100);
+            }
         }
     };
 
     const loadClusterFromMultiple = (cluster: XMLCluster) => {
-        ClusterFile.initialize(cluster);
+        // Find the index of the selected cluster in the validation results
+        const clusterIndex = localClustersList.findIndex(
+            c => c.name === cluster.name
+        );
+        ClusterFile.initialize(cluster, clusterIndex);
         setMultipleClustersOpen(false);
     };
 
     const loadDeviceTypeFromMultiple = (deviceType: XMLDeviceType) => {
+        // Find the index of the selected device type in the validation results
+        const deviceTypeIndex = localDeviceTypesList.findIndex(
+            dt => dt.name === deviceType.name
+        );
+        ClusterFile.editingDeviceTypeIndex = deviceTypeIndex;
         ClusterFile.XMLCurrentInstance.deviceType = deviceType;
         eventEmitter.emit('xmlInstanceChanged');
         setMultipleDeviceTypesOpen(false);
@@ -291,6 +334,23 @@ const OpenSavePanelButtons = () => {
                 isVisible={validationErrorsOpen}
                 onHide={() => setValidationErrorsOpen(false)}
                 errors={validationErrors}
+            />
+            <SaveOptionsDialog
+                isVisible={saveOptionsOpen}
+                onHide={() => setSaveOptionsOpen(false)}
+                onSaveEditedOnly={() => {
+                    setSaveOptionsOpen(false);
+                    openSaveAllFileWindow(false);
+                }}
+                onSaveWithOriginals={() => {
+                    setSaveOptionsOpen(false);
+                    openSaveAllFileWindow(true);
+                }}
+                itemType={
+                    ClusterFile.originalClusters.length > 1
+                        ? 'cluster'
+                        : 'deviceType'
+                }
             />
             <InfoDialog
                 isVisible={fileWarning}
