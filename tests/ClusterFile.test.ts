@@ -22,7 +22,7 @@ import {
     defaultXMLConfigurator,
     defaultXMLDeviceType,
 } from '../src/app/defaults';
-import { HexString } from '../src/app/defines';
+import { HexString, XMLDeviceType } from '../src/app/defines';
 import * as xmlParserModule from '../src/app/xmlClusterParser';
 
 jest.mock('../src/app/xmlClusterParser', () => ({
@@ -736,7 +736,9 @@ describe('ClusterFile', () => {
 
             // Check if we have a device type
             expect(ClusterFile.file.deviceType).toBeDefined();
-            expect(ClusterFile.file.deviceType?.name).toBe('my-new-device');
+            expect((ClusterFile.file.deviceType as XMLDeviceType).name).toBe(
+                'my-new-device'
+            );
         });
 
         it('should load test_cluster_extension.xml and parse it correctly', async () => {
@@ -986,13 +988,192 @@ describe('ClusterFile', () => {
 
             // Check if we have a device type
             expect(ClusterFile.file.deviceType).toBeDefined();
-            expect(ClusterFile.file.deviceType?.name).toBe('my-new-device');
+            expect((ClusterFile.file.deviceType as XMLDeviceType).name).toBe(
+                'my-new-device'
+            );
 
             // Check if the deviceType has clusters
-            expect(ClusterFile.file.deviceType?.clusters).toBeDefined();
-            expect(ClusterFile.file.deviceType?.clusters.include.length).toBe(
-                1
+            expect(
+                (ClusterFile.file.deviceType as XMLDeviceType).clusters
+            ).toBeDefined();
+            expect(
+                (ClusterFile.file.deviceType as XMLDeviceType).clusters?.include
+                    .length
+            ).toBe(1);
+        });
+    });
+
+    describe('Multiple DeviceTypes handling', () => {
+        it('should correctly handle a file with multiple device types', async () => {
+            const mockFile = new File(
+                ['multiple device types content'],
+                'multiple_device_types.xml',
+                {
+                    type: 'text/xml',
+                }
             );
+            const mockContent = '<xml>multiple device types</xml>';
+
+            const mockMultipleDeviceTypesFile = {
+                cluster: [
+                    {
+                        domain: 'General',
+                        name: 'TestCluster',
+                        code: '0xFFF1FC01',
+                        define: 'TEST_CLUSTER',
+                        description: 'Test cluster',
+                    },
+                ],
+                deviceType: [
+                    {
+                        name: 'device-type-1',
+                        domain: 'CHIP',
+                        typeName: 'Device Type 1',
+                        profileId: { $: { editable: false }, _: '0x0FFF' },
+                        deviceId: { $: { editable: false }, _: '0x001' },
+                        class: 'Simple',
+                        scope: 'Endpoint',
+                        clusters: {
+                            $: { lockOthers: true },
+                            include: [
+                                {
+                                    $: {
+                                        cluster: 'TestCluster',
+                                        client: true,
+                                        server: true,
+                                        clientLocked: false,
+                                        serverLocked: false,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        name: 'device-type-2',
+                        domain: 'CHIP',
+                        typeName: 'Device Type 2',
+                        profileId: { $: { editable: false }, _: '0x0FFF' },
+                        deviceId: { $: { editable: false }, _: '0x002' },
+                        class: 'Simple',
+                        scope: 'Endpoint',
+                        clusters: {
+                            $: { lockOthers: false },
+                            include: [
+                                {
+                                    $: {
+                                        cluster: 'TestCluster',
+                                        client: false,
+                                        server: true,
+                                        clientLocked: false,
+                                        serverLocked: false,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            };
+
+            (xmlParserModule.parseClusterXML as jest.Mock).mockResolvedValue(
+                mockMultipleDeviceTypesFile
+            );
+
+            const result = await ClusterFile.load(mockFile, mockContent);
+
+            expect(result).toBe(true);
+            expect(ClusterFile.fileName).toBe('multiple_device_types.xml');
+            expect(ClusterFile.fileUrl).toBe(mockFile);
+            expect(ClusterFile.content).toBe(mockContent);
+            expect(ClusterFile.file).toEqual(mockMultipleDeviceTypesFile);
+
+            // Check if deviceType is an array
+            expect(Array.isArray(ClusterFile.file.deviceType)).toBe(true);
+
+            // Check the number of device types
+            expect(
+                (ClusterFile.file.deviceType as XMLDeviceType[]).length
+            ).toBe(2);
+
+            // Verify first device type
+            const deviceType1 = (
+                ClusterFile.file.deviceType as XMLDeviceType[]
+            )[0];
+            expect(deviceType1.name).toBe('device-type-1');
+            expect(deviceType1.typeName).toBe('Device Type 1');
+            expect(deviceType1.deviceId._).toBe('0x001');
+
+            // Verify second device type
+            const deviceType2 = (
+                ClusterFile.file.deviceType as XMLDeviceType[]
+            )[1];
+            expect(deviceType2.name).toBe('device-type-2');
+            expect(deviceType2.typeName).toBe('Device Type 2');
+            expect(deviceType2.deviceId._).toBe('0x002');
+        });
+
+        it('should correctly handle a file with a single device type (not array)', async () => {
+            const mockFile = new File(
+                ['single device type content'],
+                'single_device_type.xml',
+                {
+                    type: 'text/xml',
+                }
+            );
+            const mockContent = '<xml>single device type</xml>';
+
+            const mockSingleDeviceTypeFile = {
+                cluster: [
+                    {
+                        domain: 'General',
+                        name: 'TestCluster',
+                        code: '0xFFF1FC01',
+                        define: 'TEST_CLUSTER',
+                        description: 'Test cluster',
+                    },
+                ],
+                deviceType: {
+                    name: 'device-type-1',
+                    domain: 'CHIP',
+                    typeName: 'Device Type 1',
+                    profileId: { $: { editable: false }, _: '0x0FFF' },
+                    deviceId: { $: { editable: false }, _: '0x001' },
+                    class: 'Simple',
+                    scope: 'Endpoint',
+                    clusters: {
+                        $: { lockOthers: true },
+                        include: [
+                            {
+                                $: {
+                                    cluster: 'TestCluster',
+                                    client: true,
+                                    server: true,
+                                    clientLocked: false,
+                                    serverLocked: false,
+                                },
+                            },
+                        ],
+                    },
+                },
+            };
+
+            (xmlParserModule.parseClusterXML as jest.Mock).mockResolvedValue(
+                mockSingleDeviceTypeFile
+            );
+
+            const result = await ClusterFile.load(mockFile, mockContent);
+
+            expect(result).toBe(true);
+            expect(ClusterFile.fileName).toBe('single_device_type.xml');
+            expect(ClusterFile.file).toEqual(mockSingleDeviceTypeFile);
+
+            // Check if deviceType is NOT an array
+            expect(Array.isArray(ClusterFile.file.deviceType)).toBe(false);
+
+            // Verify device type properties
+            const deviceType = ClusterFile.file.deviceType as XMLDeviceType;
+            expect(deviceType.name).toBe('device-type-1');
+            expect(deviceType.typeName).toBe('Device Type 1');
+            expect(deviceType.deviceId._).toBe('0x001');
         });
     });
 });

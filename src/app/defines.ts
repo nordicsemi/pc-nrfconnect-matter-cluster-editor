@@ -128,7 +128,7 @@ export interface XMLFile {
     enum?: XMLEnum[];
     struct?: XMLStruct[];
     cluster: XMLCluster[];
-    deviceType?: XMLDeviceType;
+    deviceType?: XMLDeviceType | XMLDeviceType[];
 }
 
 export interface XMLConfigurator {

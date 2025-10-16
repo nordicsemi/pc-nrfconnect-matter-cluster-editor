@@ -6,10 +6,8 @@
 
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import {
     Button,
-    DialogButton,
     InfoDialog,
     logger,
     Overlay,
@@ -19,7 +17,10 @@ import {
 
 import ClusterFile from '../Components/ClusterFile';
 import eventEmitter from '../Components/EventEmitter';
-import { XMLCluster } from '../defines';
+import { XMLCluster, XMLDeviceType } from '../defines';
+import { validateClusterFile, ValidationError } from './FileValidation';
+import { MultipleEntriesDialog } from './MultipleEntriesDialog';
+import { ValidationErrorsDialog } from './ValidationErrorsDialog';
 
 import '../../../resources/css/component.scss';
 
@@ -29,18 +30,24 @@ import '../../../resources/css/component.scss';
  *
  * This component offers core file operations including:
  * - Loading XML cluster files from the filesystem
+ * - Validating loaded files for required fields and proper structure
  * - Handling multiple clusters within a single file
+ * - Handling multiple device types within a single file
+ * - Loading files with only device types (no clusters)
  * - Saving the current cluster back to an XML file
  * - Showing appropriate dialogs for error conditions and selection options
  *
  * The component integrates with:
  * - ClusterFile singleton to manage XML file loading and serialization
+ * - FileValidation module for comprehensive file validation
  * - Redux for state management (via dispatch)
  * - Event emitter system to coordinate save operations across the application
  *
  * File operations trigger appropriate UI feedback including:
- * - Error dialog when attempting to load empty files
+ * - Validation errors dialog when required fields are missing
+ * - Error dialog when attempting to load empty files (no clusters or device types)
  * - Cluster selection dialog when loading files with multiple clusters
+ * - Device type selection dialog when loading files with multiple device types
  * - Warning dialog when attempting to save while a cluster extension is loaded
  *
  * This component is essential to the workflow of the Matter Manufacturer Cluster Editor,
@@ -53,12 +60,22 @@ const OpenSavePanelButtons = () => {
 
     const [multipleClustersOpen, setMultipleClustersOpen] =
         React.useState(false);
+    const [multipleDeviceTypesOpen, setMultipleDeviceTypesOpen] =
+        React.useState(false);
     const [localClustersList, setLocalClustersList] = React.useState<
         XMLCluster[]
+    >([]);
+    const [localDeviceTypesList, setLocalDeviceTypesList] = React.useState<
+        XMLDeviceType[]
     >([]);
     const [fileWarning, setFileWarning] = React.useState(false);
     const [fileWarningText, setFileWarningText] = React.useState('');
     const [fileWarningTitle, setFileWarningTitle] = React.useState('Error');
+    const [validationErrors, setValidationErrors] = React.useState<
+        ValidationError[]
+    >([]);
+    const [validationErrorsOpen, setValidationErrorsOpen] =
+        React.useState(false);
 
     const handleLoad = () => {
         const input = document.createElement('input');
@@ -76,10 +93,10 @@ const OpenSavePanelButtons = () => {
                             ClusterFile.loadExtension(file, content).then(
                                 extensionLoaded => {
                                     if (!extensionLoaded) {
-                                        // Cluster file does not contain any clusters or cluster extension
+                                        // Cluster file does not contain any clusters, device types, or cluster extension
                                         setFileWarning(true);
                                         setFileWarningText(
-                                            'The file does not contain any clusters or cluster extension. Please load a valid cluster file.'
+                                            'The file does not contain any clusters, device types, or cluster extension. Please load a valid file.'
                                         );
                                         setFileWarningTitle('Invalid file');
                                         logger.error('Invalid file', file.name);
@@ -87,26 +104,57 @@ const OpenSavePanelButtons = () => {
                                 }
                             );
                         } else {
-                            ClusterFile.isMultipleCluster(content).then(
-                                multipleClusters => {
-                                    if (multipleClusters) {
-                                        setLocalClustersList(
-                                            ClusterFile.file.cluster
-                                        );
-                                        setMultipleClustersOpen(true);
-                                    } else if (
-                                        !Array.isArray(ClusterFile.file.cluster)
-                                    ) {
-                                        ClusterFile.initialize(
-                                            ClusterFile.file.cluster
-                                        );
-                                    }
-                                    dispatch({
-                                        type: 'LOAD_FILE',
-                                        payload: content,
-                                    });
-                                }
+                            // Validate the loaded file
+                            const validationResult = validateClusterFile(
+                                ClusterFile.file
                             );
+
+                            // Check for validation errors
+                            if (!validationResult.isValid) {
+                                setValidationErrors(validationResult.errors);
+                                setValidationErrorsOpen(true);
+                                logger.error(
+                                    'File validation errors:',
+                                    validationResult.errors
+                                );
+                                return;
+                            }
+
+                            // Handle multiple clusters
+                            if (validationResult.hasMultipleClusters) {
+                                setLocalClustersList(validationResult.clusters);
+                                setMultipleClustersOpen(true);
+                            } else if (validationResult.clusters.length === 1) {
+                                ClusterFile.initialize(
+                                    validationResult.clusters[0]
+                                );
+                            } else if (validationResult.clusters.length === 0) {
+                                // No clusters, only device types
+                                // Initialize with a default cluster structure
+                                logger.info(
+                                    'No clusters found, loading device type only'
+                                );
+                            }
+
+                            // Handle multiple device types
+                            if (validationResult.hasMultipleDeviceTypes) {
+                                setLocalDeviceTypesList(
+                                    validationResult.deviceTypes
+                                );
+                                setMultipleDeviceTypesOpen(true);
+                            } else if (
+                                validationResult.deviceTypes.length === 1
+                            ) {
+                                // Single device type, load it directly
+                                ClusterFile.XMLCurrentInstance.deviceType =
+                                    validationResult.deviceTypes[0];
+                                eventEmitter.emit('xmlInstanceChanged');
+                            }
+
+                            dispatch({
+                                type: 'LOAD_FILE',
+                                payload: content,
+                            });
                         }
                     });
                 };
@@ -156,13 +204,15 @@ const OpenSavePanelButtons = () => {
         }
     };
 
-    const handleCancelLoad = () => {
-        setMultipleClustersOpen(false);
-    };
-
     const loadClusterFromMultiple = (cluster: XMLCluster) => {
         ClusterFile.initialize(cluster);
         setMultipleClustersOpen(false);
+    };
+
+    const loadDeviceTypeFromMultiple = (deviceType: XMLDeviceType) => {
+        ClusterFile.XMLCurrentInstance.deviceType = deviceType;
+        eventEmitter.emit('xmlInstanceChanged');
+        setMultipleDeviceTypesOpen(false);
     };
 
     useHotKey({
@@ -186,7 +236,8 @@ const OpenSavePanelButtons = () => {
                 tooltipChildren={
                     <div>
                         Use this button to load an XML file. The file must
-                        contain at least one cluster or cluster extension.
+                        contain at least one cluster, device type, or cluster
+                        extension.
                     </div>
                 }
             >
@@ -222,44 +273,25 @@ const OpenSavePanelButtons = () => {
                     Save cluster to file
                 </Button>
             </Overlay>
-            <InfoDialog
+            <MultipleEntriesDialog
                 isVisible={multipleClustersOpen}
                 onHide={() => setMultipleClustersOpen(false)}
-                title="Multiple clusters in the single file"
-                footer={
-                    <DialogButton onClick={handleCancelLoad}>
-                        Cancel
-                    </DialogButton>
-                }
-            >
-                This file contains multiple clusters, but only one can be loaded
-                at a time.
-                <br />
-                Please select one cluster from the list below to load and edit:
-                <List
-                    sx={{
-                        width: '100%',
-                        maxHeight: 300,
-                        bgcolor: 'background.paper',
-                        overflow: 'auto',
-                    }}
-                    className="multipleClusterSelection"
-                >
-                    {localClustersList.map(cluster => (
-                        <ListItem
-                            component="div"
-                            disablePadding
-                            key={cluster.name}
-                        >
-                            <ListItemButton
-                                onClick={() => loadClusterFromMultiple(cluster)}
-                            >
-                                <ListItemText primary={cluster.name} />
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                </List>
-            </InfoDialog>
+                onLoad={loadClusterFromMultiple}
+                title="cluster"
+                entries={localClustersList}
+            />
+            <MultipleEntriesDialog
+                isVisible={multipleDeviceTypesOpen}
+                onHide={() => setMultipleDeviceTypesOpen(false)}
+                onLoad={loadDeviceTypeFromMultiple}
+                title="device type"
+                entries={localDeviceTypesList}
+            />
+            <ValidationErrorsDialog
+                isVisible={validationErrorsOpen}
+                onHide={() => setValidationErrorsOpen(false)}
+                errors={validationErrors}
+            />
             <InfoDialog
                 isVisible={fileWarning}
                 onHide={() => setFileWarning(false)}
