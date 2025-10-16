@@ -138,9 +138,59 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
         return true;
     };
 
+    const handleIsValid = (field: string, items: AttributeValuesType) => {
+        if (field === 'length') {
+            if (
+                Object.keys(items).includes('array') &&
+                (items.array === true || String(items.array) !== 'true')
+            ) {
+                if (
+                    items.length === undefined ||
+                    items.length === null ||
+                    items.length <= 0
+                ) {
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        }
+        if (field === 'array') {
+            if (
+                Object.keys(items).includes('type') &&
+                items.type?.includes('string')
+            ) {
+                if (items.array !== true && String(items.array) !== 'true') {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return true;
+    };
+
+    const handleGetInvalidMessages = (field: string) => {
+        if (field === 'length') {
+            return 'The non-zero length of the attribute is required for array type.';
+        }
+        if (field === 'array') {
+            return 'The array flag must be set to true for any string type.';
+        }
+        return '';
+    };
+
     const handleDisabled = (field: string, items: AttributeValuesType) => {
         if (field === 'length') {
-            if (Object.keys(items).includes('array') && items.array === true) {
+            if (
+                Object.keys(items).includes('array') &&
+                (items.array === true || String(items.array) !== 'true')
+            ) {
+                return false;
+            }
+            if (
+                Object.keys(items).includes('type') &&
+                items.type?.includes('string')
+            ) {
                 return false;
             }
             return true;
@@ -188,6 +238,8 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
             isOptional={handleOptional}
             isDisabled={handleDisabled}
             onCancel={onCancel}
+            isValid={handleIsValid}
+            getInvalidMessages={handleGetInvalidMessages}
             typeFields={{
                 type: globalMatterTypes,
             }}
