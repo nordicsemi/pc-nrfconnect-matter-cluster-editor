@@ -58,7 +58,12 @@ describe('Manufacturer cluster round-trip', () => {
         jest.runAllTimers();
 
         // Save to XML (round-trip) and compare semantically with original
-        const serializedOriginal = ClusterFile.getSerializedCluster();
+        const serializedResult = ClusterFile.getSerializedCluster();
+        expect(serializedResult).toHaveProperty('error', false);
+        expect(serializedResult).toHaveProperty('xml');
+
+        const serializedOriginal =
+            'xml' in serializedResult ? serializedResult.xml : '';
         expect(typeof serializedOriginal).toBe('string');
         expect(serializedOriginal.length).toBeGreaterThan(0);
 
@@ -250,7 +255,14 @@ describe('Manufacturer cluster round-trip', () => {
             (ClusterFile.XMLCurrentInstance.deviceType as any).profileId = pid;
         }
 
-        const serializedModified = ClusterFile.getSerializedCluster();
+        const serializedModifiedResult = ClusterFile.getSerializedCluster();
+        expect(serializedModifiedResult).toHaveProperty('error', false);
+        expect(serializedModifiedResult).toHaveProperty('xml');
+
+        const serializedModified =
+            'xml' in serializedModifiedResult
+                ? serializedModifiedResult.xml
+                : '';
         expect(serializedModified.length).toBeGreaterThan(0);
         const parsedModified = (await parseClusterXML(
             serializedModified

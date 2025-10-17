@@ -339,21 +339,24 @@ describe('FileValidation', () => {
                 {
                     path: 'cluster[0]',
                     field: 'name',
-                    message: 'Cluster name is required',
                 },
                 {
                     path: 'cluster[0]',
                     field: 'code',
-                    message: 'Cluster code is required',
                 },
             ];
 
             const formatted = formatValidationErrors(errors);
 
-            expect(formatted).toContain('cluster[0].name');
-            expect(formatted).toContain('Cluster name is required');
-            expect(formatted).toContain('cluster[0].code');
-            expect(formatted).toContain('Cluster code is required');
+            expect(formatted).toContain(
+                'The following required fields are missing or invalid:'
+            );
+            expect(formatted).toContain(
+                'cluster[0] name is not found in the XML file'
+            );
+            expect(formatted).toContain(
+                'cluster[0] code is not found in the XML file'
+            );
         });
     });
 });

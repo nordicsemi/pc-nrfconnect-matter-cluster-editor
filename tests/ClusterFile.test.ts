@@ -556,17 +556,18 @@ describe('ClusterFile', () => {
     });
 
     describe('getSerializedCluster empty', () => {
-        it('should not serialize the empty cluster file', () => {
-            const mockSerializedXML = '';
-
+        it('should return validation error for empty cluster file', () => {
             // Reset any previous mocks
             jest.clearAllMocks();
-            (xmlParserModule.serializeClusterXML as jest.Mock).mockReturnValue(
-                mockSerializedXML
-            );
 
             const result = ClusterFile.getSerializedCluster();
-            expect(result).toBe(mockSerializedXML);
+
+            // Should return error object instead of empty string
+            expect(result).toHaveProperty('error', true);
+            expect(result).toHaveProperty('validationErrors');
+            if ('validationErrors' in result) {
+                expect(result.validationErrors.length).toBeGreaterThan(0);
+            }
         });
     });
 
