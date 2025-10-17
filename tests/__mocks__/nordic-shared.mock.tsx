@@ -148,26 +148,52 @@ jest.mock('@nordicsemiconductor/pc-nrfconnect-shared', () => ({
             </select>
         </div>
     ),
-    Dialog: ({ children, size, isVisible, onHide }: DialogProps) => (
-        <div
-            data-testid="nrf-dialog"
-            data-visible={isVisible ? 'true' : 'false'}
-            data-size={size}
-        >
-            {isVisible && (
-                <>
-                    <button
-                        data-testid="dialog-close"
-                        onClick={onHide}
-                        type="button"
-                    >
-                        Close
-                    </button>
-                    {children}
-                </>
-            )}
-        </div>
+    Dialog: Object.assign(
+        ({ children, size, isVisible, onHide }: DialogProps) => (
+            <div
+                data-testid="nrf-dialog"
+                data-visible={isVisible ? 'true' : 'false'}
+                data-size={size}
+            >
+                {isVisible && (
+                    <>
+                        <button
+                            data-testid="dialog-close"
+                            onClick={onHide}
+                            type="button"
+                        >
+                            Close
+                        </button>
+                        {children}
+                    </>
+                )}
+            </div>
+        ),
+        {
+            Header: ({ title }: { title: string }) => (
+                <div data-testid="dialog-header">{title}</div>
+            ),
+            Body: ({ children }: { children: ReactNode }) => (
+                <div data-testid="dialog-body">{children}</div>
+            ),
+            Footer: ({ children }: { children: ReactNode }) => (
+                <div data-testid="dialog-footer">{children}</div>
+            ),
+        }
     ),
+    ErrorDialog: ({ children, isVisible, onHide, title }: InfoDialogProps) =>
+        isVisible ? (
+            <div data-testid="error-dialog" data-title={title}>
+                {children}
+                <button
+                    type="button"
+                    data-testid="error-dialog-close-button"
+                    onClick={onHide}
+                >
+                    Close
+                </button>
+            </div>
+        ) : null,
     InfoDialog: ({ children, isVisible, onHide, title }: InfoDialogProps) =>
         isVisible ? (
             <div data-testid="shared-info-dialog" data-title={title}>
