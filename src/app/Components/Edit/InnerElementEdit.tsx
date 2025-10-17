@@ -54,9 +54,17 @@ export interface InnerElementChildProps<T> {
     onElementChange: (field: keyof T, value: any) => void;
 }
 
-interface InnerElementEditProps<T> {
+export interface InnerElementEditProps<T> {
     buttonLabel: string;
     listOfElements: T[];
+    /**
+     * A callback function to notify the parent of the state change.
+     *
+     * @callback notifyStateChange
+     * @param {boolean} state - The new state
+     * @returns {void}
+     */
+    notifyStateChange?: (boolean: boolean) => void;
     /**
      * A callback function to close the dialog.
      *
@@ -207,6 +215,7 @@ interface InnerElementEditProps<T> {
 const InnerElementEdit = <T,>({
     buttonLabel,
     listOfElements: elements,
+    notifyStateChange,
     onClose,
     onSave,
     buttonTooltip,
@@ -399,6 +408,7 @@ const InnerElementEdit = <T,>({
                     setInternalList(elements);
                     setCurrentLength(elements.length);
                     setShowInnerElementEdit(true);
+                    notifyStateChange?.(true);
                 }}
                 tooltip={buttonTooltip}
             />
@@ -470,6 +480,7 @@ const InnerElementEdit = <T,>({
                     <Button
                         onClick={() => {
                             setShowInnerElementEdit(false);
+                            notifyStateChange?.(false);
                             onClose?.();
                         }}
                         variant="secondary"
@@ -491,6 +502,7 @@ const InnerElementEdit = <T,>({
                             setShowInnerElementEdit(false);
                             setCurrentLength(internalList.length);
                             onSave(internalList);
+                            notifyStateChange?.(false);
                         }}
                         variant="primary"
                         size="xl"

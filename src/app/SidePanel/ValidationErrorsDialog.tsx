@@ -10,7 +10,7 @@ import {
     InfoDialog,
 } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
-import { ListItem } from '../../common/List';
+import { ListItemError } from '../../common/List';
 import { ValidationError } from './FileValidation';
 
 interface ValidationErrorsDialogProps {
@@ -51,10 +51,8 @@ export const ValidationErrorsDialog = ({
             {errors.map(error => {
                 const uniqueKey = `${error.path}-${error.field}-${error.message}`;
                 return (
-                    <ListItem
+                    <ListItemError
                         key={uniqueKey}
-                        onSelect={() => {}}
-                        selected={false}
                         item={
                             <div>
                                 {error.path} {error.field}{' '}

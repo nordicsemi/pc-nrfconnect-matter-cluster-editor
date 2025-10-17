@@ -26,20 +26,20 @@ const blurAndInvoke =
         onClick(event);
     };
 
-export const ListItem = ({
+export const ListItemWithSelector = ({
     onSelect,
     selected,
     item,
 }: {
-    onSelect: () => void;
-    selected: boolean;
+    onSelect?: () => void;
+    selected?: boolean;
     item: React.ReactNode;
 }) => (
     <div
         role="button"
         tabIndex={0}
-        onClick={blurAndInvoke(() => onSelect())}
-        onKeyUp={invokeIfSpaceOrEnterPressed(() => onSelect())}
+        onClick={blurAndInvoke(() => onSelect && onSelect())}
+        onKeyUp={invokeIfSpaceOrEnterPressed(() => onSelect && onSelect())}
         className={classNames(
             'tw-flex tw-w-full tw-cursor-pointer tw-flex-row tw-items-center tw-justify-between tw-gap-px tw-p-4',
             selected && 'tw-bg-primary tw-text-gray-50',
@@ -47,5 +47,37 @@ export const ListItem = ({
         )}
     >
         <div>{item}</div>
+    </div>
+);
+
+export const ListItem = ({ item }: { item: React.ReactNode }) => (
+    <div className="tw-flex tw-w-full tw-flex-row tw-items-center tw-justify-between tw-gap-px tw-p-4">
+        <div>{item}</div>
+    </div>
+);
+
+export const ListItemWarning = ({ item }: { item: React.ReactNode }) => (
+    <div className="tw-flex tw-w-full tw-flex-row tw-items-center tw-justify-between tw-gap-px tw-p-4">
+        <div className="tw-flex tw-items-center tw-gap-2">
+            <span
+                className="mdi mdi-alert-circle-outline tw-text-warning"
+                aria-label="Warning"
+                style={{ fontSize: '1.25em' }}
+            />
+            {item}
+        </div>
+    </div>
+);
+
+export const ListItemError = ({ item }: { item: React.ReactNode }) => (
+    <div className="tw-flex tw-w-full tw-flex-row tw-items-center tw-justify-between tw-gap-px tw-p-4">
+        <div className="tw-flex tw-items-center tw-gap-2">
+            <span
+                className="mdi mdi-alert-circle-outline tw-text-error"
+                aria-label="Error"
+                style={{ fontSize: '1.25em' }}
+            />
+            {item}
+        </div>
     </div>
 );

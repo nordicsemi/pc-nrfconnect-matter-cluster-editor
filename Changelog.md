@@ -26,3 +26,7 @@
     logic.
 -   Added "Clear All" button in Utility section to reset the editor to its
     initial state.
+-   Added automate actions to automatically update related fields when a field
+    value changes.
+-   Improved nested dialog UX: parent dialog now shows greyed out background
+    with reduced opacity when child dialogs are open.

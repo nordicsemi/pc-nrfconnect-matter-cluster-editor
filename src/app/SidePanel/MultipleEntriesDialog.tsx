@@ -10,7 +10,7 @@ import {
     InfoDialog,
 } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
-import { ListItem } from '../../common/List';
+import { ListItemWithSelector } from '../../common/List';
 
 interface MultipleEntriesDialogProps<T> {
     isVisible: boolean;
@@ -54,7 +54,7 @@ export const MultipleEntriesDialog = <T,>({
                         (entry as { name?: string }).name || 'Unknown Entry';
 
                     return (
-                        <ListItem
+                        <ListItemWithSelector
                             key={key}
                             onSelect={() => onLoad(entry)}
                             selected={false}

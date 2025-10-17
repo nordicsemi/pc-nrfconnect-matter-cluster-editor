@@ -139,58 +139,44 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
     };
 
     const handleIsValid = (field: string, items: AttributeValuesType) => {
-        if (field === 'length') {
+        const invalidMessages: string[] = [];
+        if (
+            field === 'length' &&
+            Object.keys(items).includes('array') &&
+            (items.array === true || String(items.array) === 'true')
+        ) {
             if (
-                Object.keys(items).includes('array') &&
-                (items.array === true || String(items.array) !== 'true')
+                items.length === undefined ||
+                items.length === null ||
+                items.length <= 0
             ) {
-                if (
-                    items.length === undefined ||
-                    items.length === null ||
-                    items.length <= 0
-                ) {
-                    return false;
-                }
-                return true;
+                invalidMessages.push(
+                    'The length of the attribute is required for array type.'
+                );
             }
-            return true;
         }
-        if (field === 'array') {
+        if (field === 'max') {
             if (
                 Object.keys(items).includes('type') &&
-                items.type?.includes('string')
+                isTypeNumeric(items.type) &&
+                (items.max === undefined ||
+                    items.max === null ||
+                    items.max <= (items.min || 0))
             ) {
-                if (items.array !== true && String(items.array) !== 'true') {
-                    return false;
-                }
+                invalidMessages.push(
+                    'The maximum value must be greater than the minimum value for numeric types.'
+                );
             }
-            return true;
         }
-        return true;
-    };
-
-    const handleGetInvalidMessages = (field: string) => {
-        if (field === 'length') {
-            return 'The non-zero length of the attribute is required for array type.';
-        }
-        if (field === 'array') {
-            return 'The array flag must be set to true for any string type.';
-        }
-        return '';
+        return {
+            isValid: invalidMessages.length === 0,
+            invalidMessages,
+        };
     };
 
     const handleDisabled = (field: string, items: AttributeValuesType) => {
         if (field === 'length') {
-            if (
-                Object.keys(items).includes('array') &&
-                (items.array === true || String(items.array) !== 'true')
-            ) {
-                return false;
-            }
-            if (
-                Object.keys(items).includes('type') &&
-                items.type?.includes('string')
-            ) {
+            if (items.array === true || String(items.array) === 'true') {
                 return false;
             }
             return true;
@@ -227,6 +213,23 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
         type === 'single' ||
         type === 'double';
 
+    const isTypeArray = (type: string) =>
+        type === 'octet_string' ||
+        type === 'utf8_string' ||
+        type === 'long_char_string' ||
+        type === 'char_string' ||
+        type === 'long_octet_string';
+
+    const handleAutomateActions = useCallback(
+        (field: keyof AttributeValuesType, value: AttributeValuesType) => {
+            if (field === 'type' && value.type && isTypeArray(value.type)) {
+                return { array: true };
+            }
+            return undefined;
+        },
+        []
+    );
+
     return (
         <EditBox<AttributeValuesType>
             value={localAttribute.$}
@@ -239,7 +242,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
             isDisabled={handleDisabled}
             onCancel={onCancel}
             isValid={handleIsValid}
-            getInvalidMessages={handleGetInvalidMessages}
+            automateActions={handleAutomateActions}
             typeFields={{
                 type: globalMatterTypes,
             }}

@@ -7,23 +7,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { ReactNode, useCallback, useEffect, useState } from 'react';
-import {
-    Box,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    Grid2,
-} from '@mui/material';
+import { Box, Grid2 } from '@mui/material';
 import {
     Button,
     Dialog,
-    InfoDialog,
+    ErrorDialog,
 } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
+import { ListItemError } from '../../../common/List';
 import { HexString } from '../../defines';
 import { camelCaseToTitle } from '../Utils';
 import BooleanField from './BooleanField';
 import DropdownField from './DropdownField';
+import InnerElementEdit, { InnerElementEditProps } from './InnerElementEdit';
 import TextInputField from './TextInputField';
 import TypeField from './TypeField';
 
@@ -73,16 +69,19 @@ export interface EditBoxProps<T> {
      * @callback isValid
      * @param {keyof T} field - The field that is being checked if it is valid
      * @param {T} value - The value of the object being edited
-     * @returns {boolean} Whether the field is valid
+     * @returns {isValid: boolean, invalidMessages: string[]} Whether the field is valid and the invalid messages
      */
-    isValid?: (field: keyof T, value: T) => boolean;
-
+    isValid?: (
+        field: keyof T,
+        value: T
+    ) => { isValid: boolean; invalidMessages: string[] };
     /**
-     * @callback getInvalidFields
-     * @param {T} value - The value of the object being edited
-     * @returns {string[]} The invalid fields
+     * @callback automateActions
+     * @param {keyof T} field - The field that was changed
+     * @param {T} value - The updated value object
+     * @returns {Partial<T> | void} Optional partial object with automated field updates
      */
-    getInvalidMessages?: (field: keyof T) => string;
+    automateActions?: (field: keyof T, value: T) => Partial<T> | void;
     open: boolean;
     children?: ReactNode;
     typeFields?: { [key in keyof T]?: readonly string[] };
@@ -159,8 +158,8 @@ const EditBox = <T,>({
     treatAsHex,
     isOptional = () => false,
     isDisabled = () => false,
-    isValid = () => true,
-    getInvalidMessages = () => '',
+    isValid = () => ({ isValid: true, invalidMessages: [] }),
+    automateActions,
     children,
     typeFields = {},
     dropdownFields = {},
@@ -172,7 +171,9 @@ const EditBox = <T,>({
         React.useState(false);
     const [validationWarningOpen, validationWarningOpenSet] =
         React.useState(false);
-
+    const [invalidMessages, setInvalidMessages] = React.useState<string[]>([]);
+    const [showInnerElementEdit, showInnerElementEditSet] =
+        React.useState(false);
     useEffect(() => {
         setLocalValue(value);
     }, [value]);
@@ -185,13 +186,31 @@ const EditBox = <T,>({
                 if (treatAsHex && treatAsHex(field as keyof T)) {
                     fieldValue = new HexString(fieldValue);
                 }
-                setLocalValue(prev => ({
-                    ...prev,
-                    [field]: fieldValue,
-                }));
+                setLocalValue(prev => {
+                    const updatedValue = {
+                        ...prev,
+                        [field]: fieldValue,
+                    };
+
+                    // Call automateActions if provided and apply any automated updates
+                    if (automateActions) {
+                        const automatedUpdates = automateActions(
+                            field,
+                            updatedValue
+                        );
+                        if (automatedUpdates) {
+                            return {
+                                ...updatedValue,
+                                ...automatedUpdates,
+                            };
+                        }
+                    }
+
+                    return updatedValue;
+                });
             }
         },
-        [treatAsHex, localValue]
+        [treatAsHex, localValue, automateActions]
     );
 
     const allMandatoryFieldsFilledIn = () =>
@@ -202,9 +221,14 @@ const EditBox = <T,>({
         );
 
     const allChecksPassed = () =>
-        Object.entries(localValue as object).every(([key]) =>
-            isValid(key as keyof T, localValue)
-        );
+        Object.keys(localValue as object).every(key => {
+            const result = isValid(key as keyof T, localValue);
+            if (!result.isValid) {
+                setInvalidMessages(result.invalidMessages);
+                return false;
+            }
+            return true;
+        });
 
     const renderField = (field: keyof T) => {
         const val = localValue[field];
@@ -291,88 +315,151 @@ const EditBox = <T,>({
         );
     };
 
-    return (
-        <Dialog
-            isVisible={open}
-            onHide={() => {
-                onCancel();
-            }}
-        >
-            <DialogContent>
-                <DialogContentText variant="h6">{mainTitle}</DialogContentText>
-                <br />
-                <DialogContentText variant="body2">
-                    {displayNote}
-                </DialogContentText>
-                <br />
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        gap: 2,
-                        minWidth: 500,
-                    }}
-                >
-                    {Object.keys(value as object).map(field =>
-                        renderField(field as keyof T)
-                    )}
-                    {renderBooleanFields()}
-                    {children}
-                </Box>
-            </DialogContent>
-            <DialogActions>
-                <Button variant="secondary" size="xl" onClick={onCancel}>
-                    Cancel
-                </Button>
-                <Button
-                    variant="primary"
-                    size="xl"
-                    onClick={() => {
-                        if (!allMandatoryFieldsFilledIn()) {
-                            mandatoryCheckWarningOpenSet(true);
-                            return;
-                        }
-                        if (!allChecksPassed()) {
-                            validationWarningOpenSet(true);
-                            return;
-                        }
+    const isNestedDialogVisible =
+        mandatoryCheckWarningOpen ||
+        validationWarningOpen ||
+        showInnerElementEdit;
 
-                        onSave(localValue);
-                    }}
-                >
-                    Save
-                </Button>
-                <InfoDialog
-                    isVisible={mandatoryCheckWarningOpen}
-                    onHide={() => mandatoryCheckWarningOpenSet(false)}
-                    title="Not all mandatory fields are filled in"
-                >
-                    You have not filled in all mandatory fields. Please fill in
-                    all fields marked with * before saving.
-                </InfoDialog>
-                <InfoDialog
-                    isVisible={validationWarningOpen}
-                    onHide={() => validationWarningOpenSet(false)}
-                    title="Not all fields are valid"
-                >
-                    You have not filled in all fields correctly. Please fix the
-                    following validation errors before saving:
-                    <ul>
-                        {Object.entries(localValue as object)
-                            .filter(
-                                ([key]) => !isValid(key as keyof T, localValue)
-                            )
-                            .map(([key]) => (
-                                <li key={key}>
-                                    {camelCaseToTitle(String(key))} -{' '}
-                                    {getInvalidMessages(key as keyof T)}
-                                </li>
-                            ))}
-                    </ul>
-                </InfoDialog>
-            </DialogActions>
-        </Dialog>
+    return (
+        <>
+            <Dialog
+                isVisible={open}
+                onHide={() => {
+                    onCancel();
+                }}
+                className={
+                    isNestedDialogVisible
+                        ? 'tw-pointer-events-none tw-opacity-40'
+                        : ''
+                }
+            >
+                <Dialog.Header title={mainTitle} />
+                <Dialog.Body>
+                    <div className="tw-flex tw-flex-col tw-gap-6">
+                        <div className="tw-text-sm tw-font-medium">
+                            {displayNote}
+                        </div>
+                        <div className="tw-flex tw-min-w-[500px] tw-flex-col tw-justify-center tw-gap-4">
+                            {Object.keys(value as object).map(field =>
+                                renderField(field as keyof T)
+                            )}
+                            {renderBooleanFields()}
+                            {React.Children.map(children, child => {
+                                // Recursively process children to find and inject callbacks into InnerElementEdit
+                                const processChild = (
+                                    childElement: ReactNode
+                                ): ReactNode => {
+                                    if (!React.isValidElement(childElement)) {
+                                        return childElement;
+                                    }
+
+                                    // Check if this is InnerElementEdit
+                                    if (
+                                        childElement.type === InnerElementEdit
+                                    ) {
+                                        return React.cloneElement(
+                                            childElement as React.ReactElement<
+                                                InnerElementEditProps<T>
+                                            >,
+                                            {
+                                                notifyStateChange: (
+                                                    state: boolean
+                                                ) => {
+                                                    showInnerElementEditSet(
+                                                        state
+                                                    );
+                                                },
+                                            }
+                                        );
+                                    }
+
+                                    // If not InnerElementEdit, recursively process its children
+                                    if (childElement.props?.children) {
+                                        const processedChildren =
+                                            React.Children.map(
+                                                childElement.props.children,
+                                                processChild
+                                            );
+
+                                        // If there's only one child, pass it directly instead of as an array
+                                        // This prevents issues with components that expect a single ReactElement
+                                        const childrenToPass =
+                                            React.Children.count(
+                                                childElement.props.children
+                                            ) === 1
+                                                ? processedChildren?.[0]
+                                                : processedChildren;
+
+                                        return React.cloneElement(
+                                            childElement as React.ReactElement<any>,
+                                            {},
+                                            childrenToPass
+                                        );
+                                    }
+
+                                    return childElement;
+                                };
+
+                                return processChild(child);
+                            })}
+                        </div>
+                    </div>
+                </Dialog.Body>
+                <Dialog.Footer>
+                    <Button variant="secondary" size="xl" onClick={onCancel}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="xl"
+                        onClick={() => {
+                            if (!allMandatoryFieldsFilledIn()) {
+                                mandatoryCheckWarningOpenSet(true);
+                                return;
+                            }
+                            if (!allChecksPassed()) {
+                                validationWarningOpenSet(true);
+                                return;
+                            }
+                            onSave(localValue);
+                        }}
+                    >
+                        Save
+                    </Button>
+                </Dialog.Footer>
+            </Dialog>
+            <ErrorDialog
+                isVisible={mandatoryCheckWarningOpen}
+                onHide={() => mandatoryCheckWarningOpenSet(false)}
+                title="Not all mandatory fields are filled in"
+            >
+                You have not filled in all mandatory fields. Please fill in all
+                fields marked with * before saving.
+            </ErrorDialog>
+            <ErrorDialog
+                isVisible={validationWarningOpen}
+                onHide={() => validationWarningOpenSet(false)}
+                title="Not all fields are valid"
+            >
+                <div className="tw-flex tw-flex-col tw-gap-8 tw-text-sm tw-font-medium">
+                    <div>
+                        You have not filled in all fields correctly. Please fix
+                        the following validation errors before saving:
+                    </div>
+                    <div
+                        className={`tw-flex tw-flex-col tw-gap-2 ${
+                            invalidMessages.length > 4
+                                ? 'scrollbar tw-max-h-64 tw-overflow-y-auto'
+                                : ''
+                        }`}
+                    >
+                        {invalidMessages.map(message => (
+                            <ListItemError key={message} item={message} />
+                        ))}
+                    </div>
+                </div>
+            </ErrorDialog>
+        </>
     );
 };
 
