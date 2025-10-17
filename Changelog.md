@@ -7,6 +7,11 @@
 -   Fixed an issue where saving to an XML file would result in missing fields.
 -   Resolved a problem where "false" and 0 values were not correctly saved in
     the XML file.
+-   Fixed cluster extension saving to exclude deviceType when it doesn't have
+    all required fields filled with non-default values.
+-   Improved cluster and cluster extension saving to exclude empty description
+    fields from the cluster itself and from attributes, commands, and events.
+-   Fixed deviceType cluster assignments not being saved to XML file.
 -   Removed the "array" type from the type list and added a dedicated button to
     mark a field as an array.
 -   Fixed a bug where the edit box fields were not displayed for existing items.

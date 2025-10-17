@@ -119,15 +119,50 @@ const DeviceType: React.FC = () => {
     };
 
     const saveAllRows = (elements: XMLDeviceClusterInclude[]) => {
-        if (ClusterFile.XMLCurrentInstance.deviceType?.clusters?.include) {
+        if (ClusterFile.XMLCurrentInstance.deviceType) {
+            // Ensure clusters structure exists
+            if (!ClusterFile.XMLCurrentInstance.deviceType.clusters) {
+                ClusterFile.XMLCurrentInstance.deviceType.clusters = {
+                    $: { lockOthers: false },
+                    include: [],
+                };
+            }
+            // Update include array
             ClusterFile.XMLCurrentInstance.deviceType.clusters.include =
                 elements;
+
+            // Update localDeviceType to keep state in sync
+            setLocalDeviceType(prevDeviceType => ({
+                ...prevDeviceType,
+                clusters: {
+                    $: prevDeviceType.clusters?.$ || { lockOthers: false },
+                    include: elements,
+                },
+            }));
         }
     };
 
     React.useEffect(() => {
         const saveDeviceTypeData = () => {
-            ClusterFile.XMLCurrentInstance.deviceType = localDeviceType;
+            // Only update the top-level deviceType fields, not the clusters
+            // The clusters are already updated by saveAllRows
+            if (ClusterFile.XMLCurrentInstance.deviceType) {
+                ClusterFile.XMLCurrentInstance.deviceType.name =
+                    localDeviceType.name;
+                ClusterFile.XMLCurrentInstance.deviceType.typeName =
+                    localDeviceType.typeName;
+                ClusterFile.XMLCurrentInstance.deviceType.domain =
+                    localDeviceType.domain;
+                ClusterFile.XMLCurrentInstance.deviceType.class =
+                    localDeviceType.class;
+                ClusterFile.XMLCurrentInstance.deviceType.scope =
+                    localDeviceType.scope;
+                ClusterFile.XMLCurrentInstance.deviceType.profileId =
+                    localDeviceType.profileId;
+                ClusterFile.XMLCurrentInstance.deviceType.deviceId =
+                    localDeviceType.deviceId;
+                // Don't overwrite clusters - it's already managed by saveAllRows
+            }
         };
 
         eventEmitter.on('xmlInstanceSave', saveDeviceTypeData);

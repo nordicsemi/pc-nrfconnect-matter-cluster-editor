@@ -86,7 +86,9 @@ function hasNonDefaultClusterValues(cluster: XMLCluster): boolean {
  * @param {XMLDeviceType} deviceType - The device type to check
  * @returns {boolean} - True if device type has ALL required fields with non-default values, false otherwise
  */
-function hasNonDefaultDeviceTypeValues(deviceType: XMLDeviceType): boolean {
+export function hasNonDefaultDeviceTypeValues(
+    deviceType: XMLDeviceType
+): boolean {
     if (!deviceType) {
         return false;
     }

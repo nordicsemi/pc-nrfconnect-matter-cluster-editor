@@ -23,7 +23,10 @@ import {
     XMLFile,
     XMLStruct,
 } from '../defines';
-import { validateForSave } from '../SidePanel/FileValidation';
+import {
+    hasNonDefaultDeviceTypeValues,
+    validateForSave,
+} from '../SidePanel/FileValidation';
 import { parseClusterXML, serializeClusterXML } from '../xmlClusterParser';
 import eventEmitter from './EventEmitter';
 import { deepClone } from './Utils';
@@ -751,6 +754,113 @@ class ClusterFile {
      * @function ClusterFile.getSerializedClusterExtension
      * @returns {string} The serialized cluster extension.
      */
+    /**
+     * Removes empty description fields from an array of items (attributes, commands, or events).
+     * If description is empty string or undefined, removes it from the object.
+     *
+     * @function ClusterFile.cleanEmptyDescriptions
+     * @param {any[]} items - Array of items to clean
+     * @returns {any[]} - Cleaned array with empty descriptions removed
+     */
+    private static cleanEmptyDescriptions(items: any[]): any[] {
+        if (!items || items.length === 0) {
+            return items;
+        }
+
+        return items.map(item => {
+            const cleanedItem = { ...item };
+            if (
+                cleanedItem.description === '' ||
+                cleanedItem.description === undefined
+            ) {
+                delete cleanedItem.description;
+            }
+            return cleanedItem;
+        });
+    }
+
+    /**
+     * Removes empty description fields from a cluster and its nested elements.
+     * This includes the cluster's own description and descriptions in attributes, commands, and events.
+     *
+     * @function ClusterFile.cleanClusterDescriptions
+     * @param {XMLCluster} cluster - The cluster to clean
+     * @returns {XMLCluster} - Cleaned cluster with empty descriptions removed
+     */
+    private static cleanClusterDescriptions(cluster: XMLCluster): XMLCluster {
+        const cleanedCluster = { ...cluster };
+
+        // Remove cluster's own empty description
+        if (
+            cleanedCluster.description === '' ||
+            cleanedCluster.description === undefined
+        ) {
+            delete cleanedCluster.description;
+        }
+
+        // Clean descriptions in nested arrays
+        if (
+            cleanedCluster.attribute &&
+            Array.isArray(cleanedCluster.attribute)
+        ) {
+            cleanedCluster.attribute = this.cleanEmptyDescriptions(
+                cleanedCluster.attribute
+            );
+        }
+
+        if (cleanedCluster.command && Array.isArray(cleanedCluster.command)) {
+            cleanedCluster.command = this.cleanEmptyDescriptions(
+                cleanedCluster.command
+            );
+        }
+
+        if (cleanedCluster.event && Array.isArray(cleanedCluster.event)) {
+            cleanedCluster.event = this.cleanEmptyDescriptions(
+                cleanedCluster.event
+            );
+        }
+
+        return cleanedCluster;
+    }
+
+    /**
+     * Cleans a device type by ensuring clusters structure is properly preserved.
+     * DeviceTypes don't typically have description fields, but this ensures
+     * the clusters.include array is maintained.
+     *
+     * @function ClusterFile.cleanDeviceTypeDescriptions
+     * @param {XMLDeviceType} deviceType - The device type to clean
+     * @returns {XMLDeviceType} - Cleaned device type with proper structure
+     */
+    private static cleanDeviceTypeDescriptions(
+        deviceType: XMLDeviceType
+    ): XMLDeviceType {
+        const cleanedDeviceType: any = { ...deviceType };
+
+        // Remove deviceType's own empty description if it exists (it's an extra field not in type)
+        if (
+            'description' in cleanedDeviceType &&
+            (cleanedDeviceType.description === '' ||
+                cleanedDeviceType.description === undefined)
+        ) {
+            delete cleanedDeviceType.description;
+        }
+
+        // Ensure clusters structure is preserved
+        // If clusters.include exists and has items, keep it
+        // If it's empty but clusters object exists, still keep the structure
+        if (cleanedDeviceType.clusters) {
+            cleanedDeviceType.clusters = { ...cleanedDeviceType.clusters };
+
+            // Ensure include array exists
+            if (!cleanedDeviceType.clusters.include) {
+                cleanedDeviceType.clusters.include = [];
+            }
+        }
+
+        return cleanedDeviceType as XMLDeviceType;
+    }
+
     static getSerializedClusterExtension() {
         const newAttributes = this.getNewAttributes();
         const newCommands = this.getNewCommands();
@@ -772,10 +882,26 @@ class ClusterFile {
 
         clusterExtensionObject.$.code =
             this.XMLCurrentInstance.cluster.code.toString();
-        clusterExtensionObject.attribute = newAttributes;
-        clusterExtensionObject.command = newCommands;
-        clusterExtensionObject.event = newEvents;
-        clusterExtensionObject.deviceType = newDeviceType as XMLDeviceType;
+
+        // Clean empty descriptions from attributes, commands, and events
+        clusterExtensionObject.attribute = this.cleanEmptyDescriptions(
+            newAttributes || []
+        );
+        clusterExtensionObject.command = this.cleanEmptyDescriptions(
+            newCommands || []
+        );
+        clusterExtensionObject.event = this.cleanEmptyDescriptions(
+            newEvents || []
+        );
+
+        // Only include deviceType if it has ALL required fields with non-default values
+        if (
+            newDeviceType &&
+            typeof newDeviceType !== 'string' &&
+            hasNonDefaultDeviceTypeValues(newDeviceType)
+        ) {
+            clusterExtensionObject.deviceType = newDeviceType;
+        }
 
         const clusterExtensionInstance: XMLExtensionConfigurator = {
             clusterExtension: clusterExtensionObject,
@@ -824,10 +950,24 @@ class ClusterFile {
 
         editedExtension.$.code =
             this.XMLCurrentInstance.cluster.code.toString();
-        editedExtension.attribute = newAttributes;
-        editedExtension.command = newCommands;
-        editedExtension.event = newEvents;
-        editedExtension.deviceType = newDeviceType as XMLDeviceType;
+
+        // Clean empty descriptions from attributes, commands, and events
+        editedExtension.attribute = this.cleanEmptyDescriptions(
+            newAttributes || []
+        );
+        editedExtension.command = this.cleanEmptyDescriptions(
+            newCommands || []
+        );
+        editedExtension.event = this.cleanEmptyDescriptions(newEvents || []);
+
+        // Only include deviceType if it has ALL required fields with non-default values
+        if (
+            newDeviceType &&
+            typeof newDeviceType !== 'string' &&
+            hasNonDefaultDeviceTypeValues(newDeviceType)
+        ) {
+            editedExtension.deviceType = newDeviceType;
+        }
 
         // Clone original extensions array
         const extensionsToSave = [...this.originalClusterExtensions];
@@ -924,9 +1064,11 @@ class ClusterFile {
 
         // Include cluster only if it has non-default values
         if (validation.shouldSaveCluster && this.XMLCurrentInstance.cluster) {
-            xmlFile.cluster = [
-                this.XMLCurrentInstance.cluster as unknown as XMLCluster,
-            ];
+            // Clean empty descriptions from cluster before saving
+            const cleanedCluster = this.cleanClusterDescriptions(
+                this.XMLCurrentInstance.cluster
+            );
+            xmlFile.cluster = [cleanedCluster as unknown as XMLCluster];
         }
 
         // Include device type only if it has non-default values
@@ -934,8 +1076,11 @@ class ClusterFile {
             validation.shouldSaveDeviceType &&
             this.XMLCurrentInstance.deviceType
         ) {
-            xmlFile.deviceType = this.XMLCurrentInstance
-                .deviceType as XMLDeviceType;
+            // Clean empty descriptions from device type before saving
+            const cleanedDeviceType = this.cleanDeviceTypeDescriptions(
+                this.XMLCurrentInstance.deviceType
+            );
+            xmlFile.deviceType = cleanedDeviceType as XMLDeviceType;
         }
 
         // Preserve enums and structs
@@ -1006,11 +1151,18 @@ class ClusterFile {
             xmlFile.cluster = [...this.originalClusters];
             // Replace the edited cluster if it has non-default values
             if (this.editingClusterIndex >= 0 && validation.shouldSaveCluster) {
-                xmlFile.cluster[this.editingClusterIndex] =
-                    this.XMLCurrentInstance.cluster;
+                // Clean empty descriptions from cluster before saving
+                const cleanedCluster = this.cleanClusterDescriptions(
+                    this.XMLCurrentInstance.cluster
+                );
+                xmlFile.cluster[this.editingClusterIndex] = cleanedCluster;
             }
         } else if (validation.shouldSaveCluster) {
-            xmlFile.cluster = [this.XMLCurrentInstance.cluster];
+            // Clean empty descriptions from cluster before saving
+            const cleanedCluster = this.cleanClusterDescriptions(
+                this.XMLCurrentInstance.cluster
+            );
+            xmlFile.cluster = [cleanedCluster];
         }
 
         // Build device types array
@@ -1019,19 +1171,38 @@ class ClusterFile {
             // Replace the edited device type if it has non-default values
             if (
                 this.editingDeviceTypeIndex >= 0 &&
-                validation.shouldSaveDeviceType
+                validation.shouldSaveDeviceType &&
+                this.XMLCurrentInstance.deviceType
             ) {
+                // Clean empty descriptions from device type before saving
+                const cleanedDeviceType = this.cleanDeviceTypeDescriptions(
+                    this.XMLCurrentInstance.deviceType
+                );
                 xmlFile.deviceType[this.editingDeviceTypeIndex] =
-                    this.XMLCurrentInstance.deviceType;
+                    cleanedDeviceType;
             }
         } else if (this.originalDeviceTypes.length === 1) {
             // Single device type
-            if (validation.shouldSaveDeviceType) {
-                xmlFile.deviceType = this.XMLCurrentInstance.deviceType;
+            if (
+                validation.shouldSaveDeviceType &&
+                this.XMLCurrentInstance.deviceType
+            ) {
+                // Clean empty descriptions from device type before saving
+                const cleanedDeviceType = this.cleanDeviceTypeDescriptions(
+                    this.XMLCurrentInstance.deviceType
+                );
+                xmlFile.deviceType = cleanedDeviceType;
             }
-        } else if (validation.shouldSaveDeviceType) {
+        } else if (
+            validation.shouldSaveDeviceType &&
+            this.XMLCurrentInstance.deviceType
+        ) {
             // No original device types, but current has valid data
-            xmlFile.deviceType = this.XMLCurrentInstance.deviceType;
+            // Clean empty descriptions from device type before saving
+            const cleanedDeviceType = this.cleanDeviceTypeDescriptions(
+                this.XMLCurrentInstance.deviceType
+            );
+            xmlFile.deviceType = cleanedDeviceType;
         }
 
         // Preserve enums and structs
