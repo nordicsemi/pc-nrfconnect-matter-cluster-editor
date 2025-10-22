@@ -406,9 +406,6 @@ const EditBox = <T,>({
                     </div>
                 </Dialog.Body>
                 <Dialog.Footer>
-                    <Button variant="secondary" size="xl" onClick={onCancel}>
-                        Cancel
-                    </Button>
                     <Button
                         variant="primary"
                         size="xl"
@@ -425,6 +422,9 @@ const EditBox = <T,>({
                         }}
                     >
                         Save
+                    </Button>
+                    <Button variant="secondary" size="xl" onClick={onCancel}>
+                        Cancel
                     </Button>
                 </Dialog.Footer>
             </Dialog>

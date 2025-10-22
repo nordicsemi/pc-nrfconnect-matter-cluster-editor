@@ -48,6 +48,9 @@ const ExtensionButtons = () => {
     const [saveOptionsOpen, setSaveOptionsOpen] = React.useState(false);
 
     const openSaveExtensionFileWindow = (saveWithOriginals = false) => {
+        // Save current changes before serializing
+        ClusterFile.saveCurrentChanges();
+
         const raw = saveWithOriginals
             ? ClusterFile.getSerializedClusterExtensionWithOriginals()
             : ClusterFile.getSerializedClusterExtension();

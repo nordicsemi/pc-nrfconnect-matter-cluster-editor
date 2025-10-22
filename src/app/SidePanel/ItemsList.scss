@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-4-Clause
+ */
+
+@import '@nordicsemiconductor/pc-nrfconnect-shared/styles.scss';
+
+.scrollbar {
+    // Base scrollbar styling
+    &::-webkit-scrollbar, &::-webkit-scrollbar-corner {
+        width: 14px;
+        height: 14px;
+    }
+
+    // Hide scrollbar thumb by default
+    &::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: 14px;
+        border: 5px solid $gray-50;
+        transition: background 0.2s ease;
+    }
+
+    // Show scrollbar thumb on hover
+    &:hover::-webkit-scrollbar-thumb {
+        background: $gray-500;
+    }
+
+    &:hover::-webkit-scrollbar-thumb:hover {
+        background: $gray-700;
+    }
+}

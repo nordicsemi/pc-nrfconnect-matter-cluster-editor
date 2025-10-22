@@ -45,6 +45,12 @@ export const resetClusterFileState = (): void => {
     // Clear extension flag
     ClusterFile.loadedClusterExtension = false;
 
-    // Emit event to notify UI components
+    // Clear available items arrays for sidebar
+    ClusterFile.availableClusters = [];
+    ClusterFile.availableDeviceTypes = [];
+    ClusterFile.availableExtensions = [];
+
+    // Emit events to notify UI components
     eventEmitter.emit('xmlInstanceChanged');
+    eventEmitter.emit('availableItemsChanged');
 };

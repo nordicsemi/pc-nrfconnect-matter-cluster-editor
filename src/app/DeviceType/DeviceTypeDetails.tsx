@@ -69,11 +69,15 @@ const DeviceTypeDetails: React.FC<XMLDeviceClusterInclude> = ({
             },
             {
                 name: 'Feature',
-                element: features
-                    ? features.feature.map(feature => ({
-                          name: feature.$.name,
-                      }))
-                    : [],
+                element:
+                    features && features.feature
+                        ? (Array.isArray(features.feature)
+                              ? features.feature
+                              : [features.feature]
+                          ).map(feature => ({
+                              name: feature.$.name,
+                          }))
+                        : [],
             },
         ]}
     >

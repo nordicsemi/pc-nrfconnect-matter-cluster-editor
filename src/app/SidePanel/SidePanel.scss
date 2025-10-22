@@ -3,3 +3,9 @@
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-4-Clause
  */
+
+@import '@nordicsemiconductor/pc-nrfconnect-shared/styles.scss';
+
+.scrollbar {
+    @include scrollbars($gray-50);
+}

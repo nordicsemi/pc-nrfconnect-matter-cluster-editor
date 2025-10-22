@@ -119,10 +119,14 @@ const ClusterPage: React.FC = () => {
         }
         if (value.name !== localCluster.name) {
             setLocalCluster(value);
+            // Also update the ClusterFile's current instance so changes are preserved
+            ClusterFile.XMLCurrentInstance.cluster = value;
             eventEmitter.emit('clusterEditNameChanged', value.name);
             return;
         }
         setLocalCluster(value);
+        // Also update the ClusterFile's current instance so changes are preserved
+        ClusterFile.XMLCurrentInstance.cluster = value;
     };
 
     return (

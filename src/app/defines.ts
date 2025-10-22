@@ -95,7 +95,7 @@ export interface XMLDeviceType {
 
 export interface XMLDeviceClusters {
     $: {
-        lockOthers: boolean;
+        lockOthers?: boolean;
     };
     include: XMLDeviceClusterInclude[];
 }

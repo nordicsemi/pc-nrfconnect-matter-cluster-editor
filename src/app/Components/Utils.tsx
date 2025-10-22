@@ -6,6 +6,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import { HexString } from '../defines';
 /**
  * @template T - The type of the value being synchronized
  */
@@ -93,7 +94,37 @@ export const SynchronizeChangeFromOutside = <T,>(
  * console.log(originalObject.settings.enabled); // true
  * console.log(originalObject.settings.options); // ['option1', 'option2']
  */
-export const deepClone = <S,>(obj: S): S => JSON.parse(JSON.stringify(obj));
+/**
+ * Deep clones an object while preserving HexString instances.
+ * Standard JSON.parse(JSON.stringify()) would convert HexString to plain objects.
+ * @function deepClone
+ * @param {S} obj - The object to deep clone
+ * @returns {S} - A deep clone of the input object
+ */
+export const deepClone = <S,>(obj: S): S => {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+
+    // Preserve HexString instances
+    if (obj instanceof HexString) {
+        return new HexString(obj.toString()) as unknown as S;
+    }
+
+    // Handle arrays
+    if (Array.isArray(obj)) {
+        return obj.map(item => deepClone(item)) as unknown as S;
+    }
+
+    // Handle objects
+    const cloned = {} as S;
+    Object.keys(obj).forEach(key => {
+        (cloned as Record<string, unknown>)[key] = deepClone(
+            (obj as Record<string, unknown>)[key]
+        );
+    });
+    return cloned;
+};
 
 /**
  * Converts a camelCase string to a title case string.

@@ -59,6 +59,8 @@ const DeviceType: React.FC = () => {
 
     const handleDeviceTypeChange = useCallback((value: XMLDeviceType) => {
         setLocalDeviceType(value);
+        // Also update the ClusterFile's current instance so changes are preserved
+        ClusterFile.XMLCurrentInstance.deviceType = value;
     }, []);
 
     React.useEffect(() => {
@@ -110,6 +112,13 @@ const DeviceType: React.FC = () => {
                         !Array.isArray(include.requireEvent)
                     ) {
                         include.requireEvent = [include.requireEvent];
+                    }
+                    if (
+                        include.features &&
+                        include.features.feature &&
+                        !Array.isArray(include.features.feature)
+                    ) {
+                        include.features.feature = [include.features.feature];
                     }
                 }
             );
@@ -286,7 +295,7 @@ const DeviceType: React.FC = () => {
                 />
                 <BooleanField
                     field="Lock Others"
-                    value={localDeviceType.clusters.$.lockOthers}
+                    value={localDeviceType.clusters.$?.lockOthers ?? false}
                     onChange={value => {
                         const updatedValue = { ...localDeviceType };
                         updatedValue.clusters.$ = {

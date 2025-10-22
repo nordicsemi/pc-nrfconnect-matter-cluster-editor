@@ -25,8 +25,10 @@ export interface FileValidationResult {
     errors: ValidationError[];
     hasMultipleClusters: boolean;
     hasMultipleDeviceTypes: boolean;
+    hasMultipleExtensions: boolean;
     clusters: XMLCluster[];
     deviceTypes: XMLDeviceType[];
+    extensions: XMLClusterExtension[];
 }
 
 export interface SaveValidationResult {
@@ -34,6 +36,7 @@ export interface SaveValidationResult {
     shouldSaveDeviceType: boolean;
     isValid: boolean;
     errors: ValidationError[];
+    noDataToSave: boolean;
 }
 
 export interface ExtensionFileValidationResult {
@@ -41,6 +44,16 @@ export interface ExtensionFileValidationResult {
     errors: ValidationError[];
     hasMultipleExtensions: boolean;
     extensions: XMLClusterExtension[];
+}
+
+export interface AutoFilledItem {
+    itemName: string;
+    missingFields: string[];
+}
+
+export interface AutoFillResult {
+    autoFilledFields: string[]; // Legacy flat list for logging
+    autoFilledItems: AutoFilledItem[]; // Structured list for display
 }
 
 /**
@@ -399,8 +412,10 @@ export function validateClusterFile(file: XMLFile): FileValidationResult {
     const errors: ValidationError[] = [];
     let clusters: XMLCluster[] = [];
     let deviceTypes: XMLDeviceType[] = [];
+    let extensions: XMLClusterExtension[] = [];
     let hasMultipleClusters = false;
     let hasMultipleDeviceTypes = false;
+    let hasMultipleExtensions = false;
     let hasClusters = false;
     let hasDeviceTypes = false;
 
@@ -445,6 +460,36 @@ export function validateClusterFile(file: XMLFile): FileValidationResult {
         }
     }
 
+    // Check for cluster extensions
+    if (file.clusterExtension) {
+        if (Array.isArray(file.clusterExtension)) {
+            extensions = file.clusterExtension;
+            hasMultipleExtensions = file.clusterExtension.length > 1;
+
+            // Validate each extension has a code
+            file.clusterExtension.forEach((extension, index) => {
+                if (!extension.$ || !extension.$.code) {
+                    errors.push({
+                        path: `cluster extension ${index + 1}`,
+                        field: 'code',
+                        message: 'Cluster extension must have a code',
+                    });
+                }
+            });
+        } else {
+            // Single cluster extension
+            extensions = [file.clusterExtension];
+
+            if (!file.clusterExtension.$ || !file.clusterExtension.$.code) {
+                errors.push({
+                    path: 'cluster extension',
+                    field: 'code',
+                    message: 'Cluster extension must have a code',
+                });
+            }
+        }
+    }
+
     // Check if at least one of clusters or device types is present
     if (!hasClusters && !hasDeviceTypes) {
         errors.push({
@@ -460,8 +505,10 @@ export function validateClusterFile(file: XMLFile): FileValidationResult {
         errors,
         hasMultipleClusters,
         hasMultipleDeviceTypes,
+        hasMultipleExtensions,
         clusters,
         deviceTypes,
+        extensions,
     };
 }
 
@@ -504,6 +551,7 @@ export function validateForSave(
     const errors: ValidationError[] = [];
     let shouldSaveCluster = false;
     let shouldSaveDeviceType = false;
+    let noDataToSave = false;
 
     // Check if cluster has non-default values
     if (currentInstance.cluster) {
@@ -534,19 +582,15 @@ export function validateForSave(
 
     // At least one must have non-default values
     if (!shouldSaveCluster && !shouldSaveDeviceType) {
-        errors.push({
-            path: 'root',
-            field: 'cluster/deviceType',
-            message:
-                'No data to save. Both cluster and device type have default values.',
-        });
+        noDataToSave = true;
     }
 
     return {
         shouldSaveCluster,
         shouldSaveDeviceType,
-        isValid: errors.length === 0,
+        isValid: errors.length === 0 && !noDataToSave,
         errors,
+        noDataToSave,
     };
 }
 
@@ -621,5 +665,265 @@ export function validateExtensionFile(
         errors,
         hasMultipleExtensions,
         extensions,
+    };
+}
+
+/**
+ * Auto-fills missing required fields in a cluster with appropriate default values.
+ *
+ * @function autoFillClusterFields
+ * @param {XMLCluster} cluster - The cluster to auto-fill
+ * @param {ValidationError[]} errors - Array of validation errors for this cluster
+ * @returns {string[]} - Array of field names that were auto-filled
+ */
+export function autoFillClusterFields(
+    cluster: XMLCluster,
+    errors: ValidationError[]
+): string[] {
+    const autoFilledFields: string[] = [];
+
+    errors.forEach(error => {
+        // Only auto-fill top-level cluster fields, not nested elements
+        if (!error.path.includes('[')) {
+            switch (error.field) {
+                case 'name':
+                    if (!cluster.name || cluster.name.trim() === '') {
+                        cluster.name = 'Unnamed Cluster';
+                        autoFilledFields.push(`${error.path}.name`);
+                    }
+                    break;
+                case 'code':
+                    if (!cluster.code) {
+                        cluster.code = new HexString(0);
+                        autoFilledFields.push(`${error.path}.code`);
+                    }
+                    break;
+                case 'define':
+                    if (!cluster.define || cluster.define.trim() === '') {
+                        cluster.define = 'UNDEFINED_CLUSTER';
+                        autoFilledFields.push(`${error.path}.define`);
+                    }
+                    break;
+                case 'domain':
+                    if (
+                        !cluster.domain ||
+                        (typeof cluster.domain === 'string' &&
+                            cluster.domain.trim() === '')
+                    ) {
+                        cluster.domain = 'General';
+                        autoFilledFields.push(`${error.path}.domain`);
+                    }
+                    break;
+            }
+        }
+    });
+
+    return autoFilledFields;
+}
+
+/**
+ * Auto-fills missing required fields in a device type with appropriate default values.
+ *
+ * @function autoFillDeviceTypeFields
+ * @param {XMLDeviceType} deviceType - The device type to auto-fill
+ * @param {ValidationError[]} errors - Array of validation errors for this device type
+ * @returns {string[]} - Array of field names that were auto-filled
+ */
+export function autoFillDeviceTypeFields(
+    deviceType: XMLDeviceType,
+    errors: ValidationError[]
+): string[] {
+    const autoFilledFields: string[] = [];
+
+    errors.forEach(error => {
+        switch (error.field) {
+            case 'name':
+                if (!deviceType.name || deviceType.name.trim() === '') {
+                    deviceType.name = 'Unnamed Device Type';
+                    autoFilledFields.push(`${error.path}.name`);
+                }
+                break;
+            case 'typeName':
+                if (!deviceType.typeName || deviceType.typeName.trim() === '') {
+                    deviceType.typeName = 'MA-undefined';
+                    autoFilledFields.push(`${error.path}.typeName`);
+                }
+                break;
+            case 'domain':
+                if (!deviceType.domain || deviceType.domain.trim() === '') {
+                    deviceType.domain = 'General';
+                    autoFilledFields.push(`${error.path}.domain`);
+                }
+                break;
+            case 'class':
+                if (!deviceType.class || deviceType.class.trim() === '') {
+                    deviceType.class = 'Simple';
+                    autoFilledFields.push(`${error.path}.class`);
+                }
+                break;
+            case 'scope':
+                if (!deviceType.scope || deviceType.scope.trim() === '') {
+                    deviceType.scope = 'Endpoint';
+                    autoFilledFields.push(`${error.path}.scope`);
+                }
+                break;
+            case 'deviceId':
+                if (!deviceType.deviceId) {
+                    deviceType.deviceId = {
+                        $: { editable: false },
+                        _: new HexString(0),
+                    };
+                    autoFilledFields.push(`${error.path}.deviceId`);
+                }
+                break;
+            case 'profileId':
+                if (!deviceType.profileId) {
+                    deviceType.profileId = {
+                        $: { editable: false },
+                        _: new HexString(0),
+                    };
+                    autoFilledFields.push(`${error.path}.profileId`);
+                }
+                break;
+        }
+    });
+
+    return autoFilledFields;
+}
+
+/**
+ * Validates a cluster file and auto-fills missing required fields with default values.
+ *
+ * @function validateAndAutoFillClusterFile
+ * @param {XMLFile} file - The parsed XML file
+ * @returns {FileValidationResult} - Validation result with auto-filled fields list
+ */
+export function validateAndAutoFillClusterFile(
+    file: XMLFile
+): FileValidationResult & AutoFillResult {
+    // First, validate to find all errors
+    const validationResult = validateClusterFile(file);
+    const allAutoFilledFields: string[] = [];
+    const autoFilledItems: AutoFilledItem[] = [];
+
+    // Auto-fill clusters
+    if (validationResult.clusters.length > 0) {
+        validationResult.clusters.forEach((cluster, index) => {
+            const clusterErrors = validationResult.errors.filter(
+                error =>
+                    error.path === 'cluster' ||
+                    error.path === `cluster ${index + 1}`
+            );
+            const autoFilled = autoFillClusterFields(cluster, clusterErrors);
+            allAutoFilledFields.push(...autoFilled);
+
+            if (autoFilled.length > 0) {
+                const itemName = cluster.name || `Cluster ${index + 1}`;
+                const missingFields = autoFilled.map(
+                    field => field.split('.').pop() || field
+                );
+                autoFilledItems.push({ itemName, missingFields });
+            }
+        });
+    }
+
+    // Auto-fill device types
+    if (validationResult.deviceTypes.length > 0) {
+        validationResult.deviceTypes.forEach((deviceType, index) => {
+            const deviceTypeErrors = validationResult.errors.filter(
+                error =>
+                    error.path === 'deviceType' ||
+                    error.path === `deviceType ${index + 1}`
+            );
+            const autoFilled = autoFillDeviceTypeFields(
+                deviceType,
+                deviceTypeErrors
+            );
+            allAutoFilledFields.push(...autoFilled);
+
+            if (autoFilled.length > 0) {
+                const itemName = deviceType.name || `Device Type ${index + 1}`;
+                const missingFields = autoFilled.map(
+                    field => field.split('.').pop() || field
+                );
+                autoFilledItems.push({ itemName, missingFields });
+            }
+        });
+    }
+
+    // Auto-fill cluster extensions
+    if (validationResult.extensions.length > 0) {
+        validationResult.extensions.forEach((extension, index) => {
+            if (!extension.$ || !extension.$.code) {
+                if (!extension.$) {
+                    extension.$ = { code: new HexString(0) };
+                } else {
+                    extension.$.code = new HexString(0);
+                }
+                const fieldPath = `cluster extension ${index + 1}.code`;
+                allAutoFilledFields.push(fieldPath);
+
+                const itemName = `Extension ${index + 1}`;
+                autoFilledItems.push({
+                    itemName,
+                    missingFields: ['code'],
+                });
+            }
+        });
+    }
+
+    // Re-validate after auto-filling to check if all required fields are now valid
+    const revalidationResult = validateClusterFile(file);
+
+    return {
+        ...revalidationResult,
+        autoFilledFields: allAutoFilledFields,
+        autoFilledItems,
+    };
+}
+
+/**
+ * Validates an extension file and auto-fills missing required fields with default values.
+ *
+ * @function validateAndAutoFillExtensionFile
+ * @param {XMLExtensionConfigurator} extensionFile - The parsed extension file
+ * @returns {ExtensionFileValidationResult} - Validation result with auto-filled fields list
+ */
+export function validateAndAutoFillExtensionFile(
+    extensionFile: XMLExtensionConfigurator
+): ExtensionFileValidationResult & AutoFillResult {
+    // First, validate to find all errors
+    const validationResult = validateExtensionFile(extensionFile);
+    const allAutoFilledFields: string[] = [];
+    const autoFilledItems: AutoFilledItem[] = [];
+
+    // Auto-fill extension codes if missing
+    if (validationResult.extensions.length > 0) {
+        validationResult.extensions.forEach((extension, index) => {
+            if (!extension.$ || !extension.$.code) {
+                if (!extension.$) {
+                    extension.$ = { code: new HexString(0) };
+                } else {
+                    extension.$.code = new HexString(0);
+                }
+                const fieldPath = `cluster extension ${index + 1}.code`;
+                allAutoFilledFields.push(fieldPath);
+
+                const itemName = `Extension ${index + 1}`;
+                autoFilledItems.push({
+                    itemName,
+                    missingFields: ['code'],
+                });
+            }
+        });
+    }
+
+    // Re-validate after auto-filling
+    const revalidationResult = validateExtensionFile(extensionFile);
+
+    return {
+        ...revalidationResult,
+        autoFilledFields: allAutoFilledFields,
+        autoFilledItems,
     };
 }

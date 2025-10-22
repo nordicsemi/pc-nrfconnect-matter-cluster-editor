@@ -30,10 +30,12 @@ export const ListItemWithSelector = ({
     onSelect,
     selected,
     item,
+    classNameExtended,
 }: {
     onSelect?: () => void;
     selected?: boolean;
     item: React.ReactNode;
+    classNameExtended?: string;
 }) => (
     <div
         role="button"
@@ -41,12 +43,13 @@ export const ListItemWithSelector = ({
         onClick={blurAndInvoke(() => onSelect && onSelect())}
         onKeyUp={invokeIfSpaceOrEnterPressed(() => onSelect && onSelect())}
         className={classNames(
-            'tw-flex tw-w-full tw-cursor-pointer tw-flex-row tw-items-center tw-justify-between tw-gap-px tw-p-4',
+            `tw-flex tw-w-fit tw-min-w-full tw-cursor-pointer tw-flex-row tw-items-center tw-gap-px tw-pt-2`,
+            classNameExtended,
             selected && 'tw-bg-primary tw-text-gray-50',
             !selected && 'tw-bg-gray-50 tw-text-gray-700 hover:tw-bg-gray-100'
         )}
     >
-        <div>{item}</div>
+        {item}
     </div>
 );
 

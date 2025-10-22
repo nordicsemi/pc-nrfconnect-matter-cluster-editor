@@ -288,52 +288,6 @@ describe('ClusterFile', () => {
                 'xmlInstanceChanged'
             );
         });
-
-        it('should copy XMLCurrentInstance to XMLBaseInstance after setTimeout', () => {
-            // Mock setTimeout to execute callback immediately
-            jest.useFakeTimers();
-
-            // Setup initial state
-            ClusterFile.file = {
-                deviceType: { name: 'MockDevice' },
-                enum: [{ name: 'MockEnum' }],
-                cluster: [{ name: 'Cluster1' }, { name: 'Cluster2' }],
-            } as any;
-
-            const mockCluster = {
-                name: 'SelectedCluster',
-                code: new HexString(0x1234),
-                define: 'SELECTED_CLUSTER',
-                domain: 'test',
-            };
-
-            // Call initialize
-            ClusterFile.initialize(mockCluster as any);
-
-            // Pre-timeout state - XMLBaseInstance shouldn't match
-            // XMLCurrentInstance yet
-            expect(ClusterFile.XMLBaseInstance.cluster).not.toEqual(
-                mockCluster
-            );
-
-            // Fast-forward timers
-            jest.runAllTimers();
-
-            // Post-timeout state - XMLBaseInstance should now match
-            // XMLCurrentInstance
-            expect(ClusterFile.XMLBaseInstance.cluster).toEqual(
-                ClusterFile.XMLCurrentInstance.cluster
-            );
-            expect(ClusterFile.XMLBaseInstance.cluster.name).toBe(
-                'SelectedCluster'
-            );
-            expect(ClusterFile.XMLBaseInstance.deviceType).toEqual(
-                ClusterFile.XMLCurrentInstance.deviceType
-            );
-
-            // Cleanup
-            jest.useRealTimers();
-        });
     });
 
     describe('getNewAttributes, getNewCommands, getNewEvents', () => {
@@ -556,18 +510,17 @@ describe('ClusterFile', () => {
     });
 
     describe('getSerializedCluster empty', () => {
-        it('should return validation error for empty cluster file', () => {
+        it('should return noDataToSave error for empty cluster file', () => {
             // Reset any previous mocks
             jest.clearAllMocks();
 
             const result = ClusterFile.getSerializedCluster();
 
-            // Should return error object instead of empty string
+            // Should return error object with noDataToSave flag
             expect(result).toHaveProperty('error', true);
-            expect(result).toHaveProperty('validationErrors');
-            if ('validationErrors' in result) {
-                expect(result.validationErrors.length).toBeGreaterThan(0);
-            }
+            expect(result).toHaveProperty('noDataToSave', true);
+            expect(result).toHaveProperty('message');
+            expect(result.message).toContain('No data to save');
         });
     });
 

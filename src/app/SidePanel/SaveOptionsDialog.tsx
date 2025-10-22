@@ -88,15 +88,8 @@ export const SaveOptionsDialog = ({
                         onClick={onSaveWithOriginals}
                         className="tw-w-full"
                     >
-                        Save all {itemTypePlural} from original file (with your
-                        edits)
+                        Save all data from original file with your edits
                     </Button>
-                </div>
-
-                <div className="tw-text-xs tw-text-gray-600">
-                    If you choose to save all {itemTypePlural}, your edits will
-                    be applied to the {itemTypeLabel} you selected, and all
-                    other {itemTypePlural} will remain unchanged.
                 </div>
             </div>
         </InfoDialog>

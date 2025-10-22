@@ -17,18 +17,12 @@ import {
 
 import ClusterFile from '../Components/ClusterFile';
 import eventEmitter from '../Components/EventEmitter';
+import { deepClone } from '../Components/Utils';
 import {
-    HexString,
-    XMLCluster,
-    XMLClusterExtension,
-    XMLDeviceType,
-} from '../defines';
-import {
-    validateClusterFile,
-    validateExtensionFile,
+    validateAndAutoFillClusterFile,
+    validateAndAutoFillExtensionFile,
     ValidationError,
 } from './FileValidation';
-import { MultipleEntriesDialog } from './MultipleEntriesDialog';
 import { SaveOptionsDialog } from './SaveOptionsDialog';
 import { ValidationErrorsDialog } from './ValidationErrorsDialog';
 
@@ -68,21 +62,6 @@ import '../../../resources/css/component.scss';
 const OpenSavePanelButtons = () => {
     const dispatch = useDispatch();
 
-    const [multipleClustersOpen, setMultipleClustersOpen] =
-        React.useState(false);
-    const [multipleDeviceTypesOpen, setMultipleDeviceTypesOpen] =
-        React.useState(false);
-    const [multipleExtensionsOpen, setMultipleExtensionsOpen] =
-        React.useState(false);
-    const [localClustersList, setLocalClustersList] = React.useState<
-        XMLCluster[]
-    >([]);
-    const [localDeviceTypesList, setLocalDeviceTypesList] = React.useState<
-        XMLDeviceType[]
-    >([]);
-    const [localExtensionsList, setLocalExtensionsList] = React.useState<
-        XMLClusterExtension[]
-    >([]);
     const [fileWarning, setFileWarning] = React.useState(false);
     const [fileWarningText, setFileWarningText] = React.useState('');
     const [fileWarningTitle, setFileWarningTitle] = React.useState('Error');
@@ -92,6 +71,9 @@ const OpenSavePanelButtons = () => {
     const [validationErrorsOpen, setValidationErrorsOpen] =
         React.useState(false);
     const [saveOptionsOpen, setSaveOptionsOpen] = React.useState(false);
+    const [autoFillNotification, setAutoFillNotification] =
+        React.useState(false);
+    const [autoFillMessage, setAutoFillMessage] = React.useState('');
 
     const handleLoad = () => {
         const input = document.createElement('input');
@@ -117,35 +99,69 @@ const OpenSavePanelButtons = () => {
                                         setFileWarningTitle('Invalid file');
                                         logger.error('Invalid file', file.name);
                                     } else {
-                                        // Validate the loaded extension file
+                                        // Validate and auto-fill the loaded extension file
                                         const validationResult =
-                                            validateExtensionFile(
+                                            validateAndAutoFillExtensionFile(
                                                 ClusterFile.extensionFile
                                             );
 
-                                        // Check for validation errors
-                                        if (!validationResult.isValid) {
-                                            setValidationErrors(
-                                                validationResult.errors
+                                        // Show notification if fields were auto-filled
+                                        if (
+                                            validationResult.autoFilledItems
+                                                .length > 0
+                                        ) {
+                                            const formattedMessage =
+                                                validationResult.autoFilledItems
+                                                    .map(
+                                                        item =>
+                                                            `${
+                                                                item.itemName
+                                                            }: ${item.missingFields.join(
+                                                                ', '
+                                                            )}`
+                                                    )
+                                                    .join('\n');
+                                            setAutoFillMessage(
+                                                `Some required fields were missing and have been filled with zeroes:\n\n${formattedMessage}\n\nPlease review and update them if needed.`
                                             );
-                                            setValidationErrorsOpen(true);
-                                            logger.error(
-                                                'Extension file validation errors:',
-                                                validationResult.errors
+                                            setAutoFillNotification(true);
+                                            logger.info(
+                                                'Auto-filled fields:',
+                                                validationResult.autoFilledFields
                                             );
-                                            return;
                                         }
 
-                                        // Handle multiple cluster extensions
+                                        // Clear all available items and store extensions for sidebar (use deepClone from Utils to preserve HexString instances)
+                                        ClusterFile.availableClusters = [];
+                                        ClusterFile.availableDeviceTypes = [];
+                                        ClusterFile.availableExtensions =
+                                            validationResult.extensions.map(
+                                                ext => deepClone(ext)
+                                            );
+
+                                        // Handle multiple cluster extensions - don't auto-load
                                         if (
                                             validationResult.hasMultipleExtensions
                                         ) {
-                                            setLocalExtensionsList(
-                                                validationResult.extensions
+                                            // Don't initialize any extension, let user click
+                                            logger.info(
+                                                'Multiple extensions found, please select one from sidebar'
                                             );
-                                            setMultipleExtensionsOpen(true);
+                                        } else if (
+                                            validationResult.extensions
+                                                .length === 1
+                                        ) {
+                                            // Single extension, auto-load it
+                                            ClusterFile.initializeExtension(
+                                                validationResult.extensions[0],
+                                                0
+                                            );
                                         }
-                                        // Single extension is already initialized in loadExtension
+
+                                        // Emit event to update sidebar
+                                        eventEmitter.emit(
+                                            'availableItemsChanged'
+                                        );
 
                                         dispatch({
                                             type: 'LOAD_FILE',
@@ -155,52 +171,102 @@ const OpenSavePanelButtons = () => {
                                 }
                             );
                         } else {
-                            // Validate the loaded file
-                            const validationResult = validateClusterFile(
-                                ClusterFile.file
-                            );
-
-                            // Check for validation errors
-                            if (!validationResult.isValid) {
-                                setValidationErrors(validationResult.errors);
-                                setValidationErrorsOpen(true);
-                                logger.error(
-                                    'File validation errors:',
-                                    validationResult.errors
+                            // Validate and auto-fill the loaded file
+                            const validationResult =
+                                validateAndAutoFillClusterFile(
+                                    ClusterFile.file
                                 );
-                                return;
+
+                            // Show notification if fields were auto-filled
+                            if (validationResult.autoFilledItems.length > 0) {
+                                const formattedMessage =
+                                    validationResult.autoFilledItems
+                                        .map(
+                                            item =>
+                                                `${
+                                                    item.itemName
+                                                }: ${item.missingFields.join(
+                                                    ', '
+                                                )}`
+                                        )
+                                        .join('\n');
+                                setAutoFillMessage(
+                                    `Some required fields were missing and have been filled with default values:\n\n${formattedMessage}\n\nPlease review and update them.`
+                                );
+                                setAutoFillNotification(true);
+                                logger.info(
+                                    'Auto-filled fields:',
+                                    validationResult.autoFilledFields
+                                );
                             }
 
-                            // Handle multiple clusters
+                            // Clear all available items and store items for sidebar (use deepClone from Utils to preserve HexString instances)
+                            ClusterFile.availableClusters =
+                                validationResult.clusters.map(cluster =>
+                                    deepClone(cluster)
+                                );
+                            ClusterFile.availableDeviceTypes =
+                                validationResult.deviceTypes.map(dt =>
+                                    deepClone(dt)
+                                );
+                            ClusterFile.availableExtensions =
+                                validationResult.extensions.map(ext =>
+                                    deepClone(ext)
+                                );
+
+                            // Handle multiple clusters - don't auto-load
                             if (validationResult.hasMultipleClusters) {
-                                setLocalClustersList(validationResult.clusters);
-                                setMultipleClustersOpen(true);
+                                // Don't initialize any cluster, let user click
+                                logger.info(
+                                    'Multiple clusters found, please select one from sidebar'
+                                );
                             } else if (validationResult.clusters.length === 1) {
+                                // Single cluster, auto-load it
                                 ClusterFile.initialize(
                                     validationResult.clusters[0]
                                 );
                             } else if (validationResult.clusters.length === 0) {
-                                // No clusters, only device types
-                                // Initialize with a default cluster structure
-                                logger.info(
-                                    'No clusters found, loading device type only'
-                                );
+                                // No clusters - check if we should auto-load an extension
+                                // Handle multiple cluster extensions - don't auto-load
+                                if (validationResult.hasMultipleExtensions) {
+                                    // Don't initialize any extension, let user click
+                                    logger.info(
+                                        'Multiple extensions found, please select one from sidebar'
+                                    );
+                                } else if (
+                                    validationResult.extensions.length === 1
+                                ) {
+                                    // Single extension and no cluster, auto-load the extension
+                                    ClusterFile.initializeExtension(
+                                        validationResult.extensions[0],
+                                        0
+                                    );
+                                    eventEmitter.emit('xmlInstanceChanged');
+                                } else {
+                                    // No clusters and no extensions, only device types
+                                    logger.info(
+                                        'No clusters or extensions found, loading device type only'
+                                    );
+                                }
                             }
 
-                            // Handle multiple device types
+                            // Handle multiple device types - don't auto-load
                             if (validationResult.hasMultipleDeviceTypes) {
-                                setLocalDeviceTypesList(
-                                    validationResult.deviceTypes
+                                // Don't initialize any device type, let user click
+                                logger.info(
+                                    'Multiple device types found, please select one from sidebar'
                                 );
-                                setMultipleDeviceTypesOpen(true);
                             } else if (
                                 validationResult.deviceTypes.length === 1
                             ) {
-                                // Single device type, load it directly
+                                // Single device type, auto-load it
                                 ClusterFile.XMLCurrentInstance.deviceType =
                                     validationResult.deviceTypes[0];
                                 eventEmitter.emit('xmlInstanceChanged');
                             }
+
+                            // Emit event to update sidebar
+                            eventEmitter.emit('availableItemsChanged');
 
                             dispatch({
                                 type: 'LOAD_FILE',
@@ -216,12 +282,21 @@ const OpenSavePanelButtons = () => {
     };
 
     const openSaveAllFileWindow = (saveWithOriginals = false) => {
+        // Save current changes before serializing
+        ClusterFile.saveCurrentChanges();
+
         const result = saveWithOriginals
             ? ClusterFile.getSerializedClusterWithOriginals()
             : ClusterFile.getSerializedCluster();
 
         if (result.error) {
-            if (result.validationErrors) {
+            if (result.noDataToSave) {
+                // Handle "no data to save" case with informational dialog
+                setFileWarning(true);
+                setFileWarningText(result.message || 'No data to save.');
+                setFileWarningTitle('No Data');
+                logger.info('No data to save');
+            } else if (result.validationErrors) {
                 setValidationErrors(result.validationErrors);
                 setValidationErrorsOpen(true);
                 logger.error(
@@ -258,6 +333,9 @@ const OpenSavePanelButtons = () => {
     };
 
     const handleSave = () => {
+        // Save current changes before saving to file
+        ClusterFile.saveCurrentChanges();
+
         // Emit an event and wait 100ms for all listeners to finish
         // Before showing the window
         if (ClusterFile.loadedClusterExtension) {
@@ -286,43 +364,6 @@ const OpenSavePanelButtons = () => {
             }
         }
     };
-
-    const loadClusterFromMultiple = (cluster: XMLCluster) => {
-        // Find the index of the selected cluster in the validation results
-        const clusterIndex = localClustersList.findIndex(
-            c => c.name === cluster.name
-        );
-        ClusterFile.initialize(cluster, clusterIndex);
-        setMultipleClustersOpen(false);
-    };
-
-    const loadDeviceTypeFromMultiple = (deviceType: XMLDeviceType) => {
-        // Find the index of the selected device type in the validation results
-        const deviceTypeIndex = localDeviceTypesList.findIndex(
-            dt => dt.name === deviceType.name
-        );
-        ClusterFile.editingDeviceTypeIndex = deviceTypeIndex;
-        ClusterFile.XMLCurrentInstance.deviceType = deviceType;
-        eventEmitter.emit('xmlInstanceChanged');
-        setMultipleDeviceTypesOpen(false);
-    };
-
-    const loadExtensionFromMultiple = (extension: XMLClusterExtension) => {
-        // Find the index of the selected extension in the validation results
-        const extensionIndex = localExtensionsList.findIndex(
-            ext => ext.$.code === extension.$.code
-        );
-        ClusterFile.initializeExtension(extension, extensionIndex);
-        setMultipleExtensionsOpen(false);
-    };
-
-    // Create display objects for extensions with name property for MultipleEntriesDialog
-    const extensionDisplayList = localExtensionsList.map((ext, index) => ({
-        ...ext,
-        name: `Extension ${index + 1} (Code: ${
-            ext.$.code instanceof HexString ? ext.$.code.toString() : ext.$.code
-        })`,
-    }));
 
     useHotKey({
         hotKey: 'ctrl+o',
@@ -382,32 +423,18 @@ const OpenSavePanelButtons = () => {
                     Save cluster to file
                 </Button>
             </Overlay>
-            <MultipleEntriesDialog
-                isVisible={multipleClustersOpen}
-                onHide={() => setMultipleClustersOpen(false)}
-                onLoad={loadClusterFromMultiple}
-                title="cluster"
-                entries={localClustersList}
-            />
-            <MultipleEntriesDialog
-                isVisible={multipleDeviceTypesOpen}
-                onHide={() => setMultipleDeviceTypesOpen(false)}
-                onLoad={loadDeviceTypeFromMultiple}
-                title="device type"
-                entries={localDeviceTypesList}
-            />
-            <MultipleEntriesDialog
-                isVisible={multipleExtensionsOpen}
-                onHide={() => setMultipleExtensionsOpen(false)}
-                onLoad={loadExtensionFromMultiple}
-                title="cluster extension"
-                entries={extensionDisplayList}
-            />
             <ValidationErrorsDialog
                 isVisible={validationErrorsOpen}
                 onHide={() => setValidationErrorsOpen(false)}
                 errors={validationErrors}
             />
+            <InfoDialog
+                isVisible={autoFillNotification}
+                onHide={() => setAutoFillNotification(false)}
+                title="Warning"
+            >
+                <div style={{ whiteSpace: 'pre-line' }}>{autoFillMessage}</div>
+            </InfoDialog>
             <SaveOptionsDialog
                 isVisible={saveOptionsOpen}
                 onHide={() => setSaveOptionsOpen(false)}
