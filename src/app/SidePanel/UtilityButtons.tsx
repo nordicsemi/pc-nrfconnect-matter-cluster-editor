@@ -54,13 +54,13 @@ const UtilityButtons = () => {
                     onClick={() => setClearConfirmOpen(true)}
                     className="w-100"
                 >
-                    Clear All
+                    Clear all
                 </Button>
             </Overlay>
             <InfoDialog
                 isVisible={clearConfirmOpen}
                 onHide={() => setClearConfirmOpen(false)}
-                title="Clear All Data"
+                title="Clear all Data"
                 footer={
                     <div className="tw-flex tw-justify-end tw-gap-2">
                         <Button
@@ -76,7 +76,7 @@ const UtilityButtons = () => {
                             size="lg"
                             className="tw-bg-red-600"
                         >
-                            Clear All
+                            Clear all
                         </Button>
                     </div>
                 }
@@ -84,7 +84,8 @@ const UtilityButtons = () => {
                 <div className="tw-flex tw-flex-col tw-gap-4">
                     <p>
                         Are you sure you want to clear all loaded data? This
-                        will reset the editor to its initial state.
+                        will reset the editor to its initial state and clear all
+                        loaded data.
                     </p>
                     <p className="tw-font-semibold tw-text-red-600">
                         This action cannot be undone.

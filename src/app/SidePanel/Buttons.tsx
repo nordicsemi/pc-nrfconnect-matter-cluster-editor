@@ -122,7 +122,7 @@ const OpenSavePanelButtons = () => {
                                                     )
                                                     .join('\n');
                                             setAutoFillMessage(
-                                                `Some required fields were missing and have been filled with zeroes:\n\n${formattedMessage}\n\nPlease review and update them if needed.`
+                                                `Some required fields were missing and have been filled with zeroes:\n\n${formattedMessage}\n\nReview and update them if needed.`
                                             );
                                             setAutoFillNotification(true);
                                             logger.info(
@@ -131,7 +131,7 @@ const OpenSavePanelButtons = () => {
                                             );
                                         }
 
-                                        // Clear all available items and store extensions for sidebar (use deepClone from Utils to preserve HexString instances)
+                                        // Clear all available items and store extensions for side panel (use deepClone from Utils to preserve HexString instances)
                                         ClusterFile.availableClusters = [];
                                         ClusterFile.availableDeviceTypes = [];
                                         ClusterFile.availableExtensions =
@@ -145,7 +145,7 @@ const OpenSavePanelButtons = () => {
                                         ) {
                                             // Don't initialize any extension, let user click
                                             logger.info(
-                                                'Multiple extensions found, please select one from sidebar'
+                                                'Multiple extensions found; select one from the side panel'
                                             );
                                         } else if (
                                             validationResult.extensions
@@ -158,7 +158,7 @@ const OpenSavePanelButtons = () => {
                                             );
                                         }
 
-                                        // Emit event to update sidebar
+                                        // Emit event to update side panel
                                         eventEmitter.emit(
                                             'availableItemsChanged'
                                         );
@@ -191,7 +191,7 @@ const OpenSavePanelButtons = () => {
                                         )
                                         .join('\n');
                                 setAutoFillMessage(
-                                    `Some required fields were missing and have been filled with default values:\n\n${formattedMessage}\n\nPlease review and update them.`
+                                    `Some required fields were missing and have been filled with default values:\n\n${formattedMessage}\n\nReview and update them.`
                                 );
                                 setAutoFillNotification(true);
                                 logger.info(
@@ -200,7 +200,7 @@ const OpenSavePanelButtons = () => {
                                 );
                             }
 
-                            // Clear all available items and store items for sidebar (use deepClone from Utils to preserve HexString instances)
+                            // Clear all available items and store items for side panel (use deepClone from Utils to preserve HexString instances)
                             ClusterFile.availableClusters =
                                 validationResult.clusters.map(cluster =>
                                     deepClone(cluster)
@@ -218,7 +218,7 @@ const OpenSavePanelButtons = () => {
                             if (validationResult.hasMultipleClusters) {
                                 // Don't initialize any cluster, let user click
                                 logger.info(
-                                    'Multiple clusters found, please select one from sidebar'
+                                    'Multiple clusters found; select one from the side panel'
                                 );
                             } else if (validationResult.clusters.length === 1) {
                                 // Single cluster, auto-load it
@@ -231,7 +231,7 @@ const OpenSavePanelButtons = () => {
                                 if (validationResult.hasMultipleExtensions) {
                                     // Don't initialize any extension, let user click
                                     logger.info(
-                                        'Multiple extensions found, please select one from sidebar'
+                                        'Multiple extensions found; select one from the side panel'
                                     );
                                 } else if (
                                     validationResult.extensions.length === 1
@@ -245,7 +245,7 @@ const OpenSavePanelButtons = () => {
                                 } else {
                                     // No clusters and no extensions, only device types
                                     logger.info(
-                                        'No clusters or extensions found, loading device type only'
+                                        'No clusters or extensions found; loading device type only'
                                     );
                                 }
                             }
@@ -254,7 +254,7 @@ const OpenSavePanelButtons = () => {
                             if (validationResult.hasMultipleDeviceTypes) {
                                 // Don't initialize any device type, let user click
                                 logger.info(
-                                    'Multiple device types found, please select one from sidebar'
+                                    'Multiple device types found; select one from the side panel'
                                 );
                             } else if (
                                 validationResult.deviceTypes.length === 1
@@ -265,7 +265,7 @@ const OpenSavePanelButtons = () => {
                                 eventEmitter.emit('xmlInstanceChanged');
                             }
 
-                            // Emit event to update sidebar
+                            // Emit event to update side panel
                             eventEmitter.emit('availableItemsChanged');
 
                             dispatch({
@@ -293,7 +293,7 @@ const OpenSavePanelButtons = () => {
             if (result.noDataToSave) {
                 // Handle "no data to save" case with informational dialog
                 setFileWarning(true);
-                setFileWarningText(result.message || 'No data to save.');
+                setFileWarningText(result.message || 'No data to save');
                 setFileWarningTitle('No Data');
                 logger.info('No data to save');
             } else if (result.validationErrors) {

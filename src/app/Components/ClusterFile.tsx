@@ -82,7 +82,7 @@ class ClusterFile {
     static editingDeviceTypeIndex = -1;
     static editingExtensionIndex = -1;
 
-    // Available items for sidebar lists (these are working copies that get updated with user changes)
+    // Available items for side panel lists (these are working copies that get updated with user changes)
     static availableClusters: XMLCluster[] = [];
     static availableDeviceTypes: XMLDeviceType[] = [];
     static availableExtensions: XMLClusterExtension[] = [];

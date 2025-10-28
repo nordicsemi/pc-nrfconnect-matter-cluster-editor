@@ -43,7 +43,7 @@ export const ListItemWithSelector = ({
         onClick={blurAndInvoke(() => onSelect && onSelect())}
         onKeyUp={invokeIfSpaceOrEnterPressed(() => onSelect && onSelect())}
         className={classNames(
-            `tw-flex tw-w-fit tw-min-w-full tw-cursor-pointer tw-flex-row tw-items-center tw-gap-px tw-pt-2`,
+            `tw-flex tw-w-fit tw-min-w-full tw-cursor-pointer tw-flex-row tw-items-center tw-gap-0 tw-p-1`,
             classNameExtended,
             selected && 'tw-bg-primary tw-text-gray-50',
             !selected && 'tw-bg-gray-50 tw-text-gray-700 hover:tw-bg-gray-100'

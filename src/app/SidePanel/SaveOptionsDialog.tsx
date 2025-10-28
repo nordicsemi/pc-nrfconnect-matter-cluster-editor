@@ -71,7 +71,7 @@ export const SaveOptionsDialog = ({
             <div className="tw-flex tw-flex-col tw-gap-6">
                 <div className="tw-text-sm">
                     This file originally contained multiple {itemTypePlural}.
-                    How would you like to save?
+                    How would you like to save them?
                 </div>
 
                 <div className="tw-flex tw-flex-col tw-gap-3">
@@ -80,7 +80,7 @@ export const SaveOptionsDialog = ({
                         onClick={onSaveEditedOnly}
                         className="tw-w-full"
                     >
-                        Save only the edited {itemTypeLabel}
+                        Save only the currently selected {itemTypeLabel}
                     </Button>
 
                     <Button
@@ -88,7 +88,7 @@ export const SaveOptionsDialog = ({
                         onClick={onSaveWithOriginals}
                         className="tw-w-full"
                     >
-                        Save all data from original file with your edits
+                        Save all loaded data with all your edits applied
                     </Button>
                 </div>
             </div>

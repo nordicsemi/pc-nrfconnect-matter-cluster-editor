@@ -106,9 +106,17 @@ const ClusterPage: React.FC = () => {
     const handleFieldTooltip = (field: string) => tooltips[field] || '';
 
     const handleOptional = (field: string) => {
+        // Description is always optional
         if (field === 'description') {
             return true;
         }
+
+        // For cluster extensions, domain, name, and define are optional
+        // For regular clusters, they are required
+        if (field === 'domain' || field === 'name' || field === 'define') {
+            return ClusterFile.loadedClusterExtension;
+        }
+
         return false;
     };
 

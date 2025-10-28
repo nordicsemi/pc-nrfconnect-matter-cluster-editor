@@ -21,7 +21,7 @@ interface ItemsListProps<T> {
 }
 
 /**
- * Collapsible list component for displaying clusters, device types, or extensions in the sidebar.
+ * Collapsible list component for displaying clusters, device types, or extensions in the side panel.
  *
  * This component provides a collapsible section with a list of items that can be clicked to load.
  * The currently active item is highlighted. The section is only rendered when items are available.
@@ -81,11 +81,10 @@ export const ItemsList = <T,>({
                                     onSelect={() => onItemClick(item, index)}
                                     selected={isSelected}
                                     item={
-                                        <div className="tw-whitespace-nowrap tw-text-sm">
+                                        <div className="tw-whitespace-nowrap">
                                             {name}
                                         </div>
                                     }
-                                    classNameExtended="tw-gap-0 tw-p-2"
                                 />
                             );
                         })}

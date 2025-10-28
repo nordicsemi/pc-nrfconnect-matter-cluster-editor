@@ -45,7 +45,7 @@ export const resetClusterFileState = (): void => {
     // Clear extension flag
     ClusterFile.loadedClusterExtension = false;
 
-    // Clear available items arrays for sidebar
+    // Clear available items arrays for side panel
     ClusterFile.availableClusters = [];
     ClusterFile.availableDeviceTypes = [];
     ClusterFile.availableExtensions = [];

@@ -5,11 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import {
-    Group,
-    Overlay,
-    SidePanel,
-} from '@nordicsemiconductor/pc-nrfconnect-shared';
+import { Group, SidePanel } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
 import ClusterFile from '../Components/ClusterFile';
 import eventEmitter from '../Components/EventEmitter';
@@ -62,7 +58,6 @@ export default () => {
     const [currentDeviceTypeIndex, setCurrentDeviceTypeIndex] = useState(-1);
     const [currentExtensionIndex, setCurrentExtensionIndex] = useState(-1);
     const [loadedFileName, setLoadedFileName] = useState<string>('');
-    const [loadedFilePath, setLoadedFilePath] = useState<string>('');
 
     useEffect(() => {
         const updateAvailableItems = () => {
@@ -70,11 +65,6 @@ export default () => {
             setAvailableDeviceTypes([...ClusterFile.availableDeviceTypes]);
             setAvailableExtensions([...ClusterFile.availableExtensions]);
             setLoadedFileName(ClusterFile.fileName);
-            // Get the full path - File object has a 'path' property in Electron
-            const filePath =
-                (ClusterFile.fileUrl as File & { path?: string })?.path ||
-                ClusterFile.fileName;
-            setLoadedFilePath(filePath);
             // Also update the current indices
             setCurrentClusterIndex(ClusterFile.editingClusterIndex);
             setCurrentDeviceTypeIndex(ClusterFile.editingDeviceTypeIndex);
@@ -143,22 +133,11 @@ export default () => {
                 <UtilityButtons />
             </Group>
 
+            {/* Loaded file section */}
             {hasLoadedItems && loadedFileName && (
                 <Group heading="Loaded File">
-                    <div className="tw-overflow-y-auto tw-truncate tw-border-t tw-border-gray-200">
-                        <Overlay
-                            tooltipId="loaded-file-path-tooltip"
-                            placement="right"
-                            tooltipChildren={
-                                <div className="tw-break-all tw-text-xs">
-                                    {loadedFilePath}
-                                </div>
-                            }
-                        >
-                            <div className="tw-cursor-help tw-truncate tw-text-sm tw-text-gray-700">
-                                {loadedFileName}
-                            </div>
-                        </Overlay>
+                    <div className="tw-truncate tw-text-sm tw-text-gray-700">
+                        {loadedFileName}
                     </div>
                 </Group>
             )}
