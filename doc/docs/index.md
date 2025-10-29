@@ -18,7 +18,7 @@ The app supports the following features:
 - Creating extensions to the existing clusters defined in the Matter data model.
 - Adding new enumerations and structures.
 - Creating a new device type that is not listed in the Matter Device Type Library Specification.
-- Opening and editing XML files that contains multiple clusters, device types, or cluster extensions.
+- Opening and editing XML files that contain multiple clusters, device types, or cluster extensions.
 
 Based on your edits, the tool generates a new XML file with the cluster definition or an extension to the existing cluster.
 You can use the XML file as an argument in the Matter west commands to add the XML file to the Matter ZCL database.

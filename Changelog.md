@@ -1,4 +1,4 @@
-## 1.0.0 2025-10-30
+## 1.0.0 - 2025-11-04
 
 ### Added
 
@@ -21,12 +21,12 @@
 
 -   Parent dialog now shows a greyed-out background with reduced opacity when
     child dialogs are open.
+-   Handling composite types, ensuring their length field is set to a non-zero
+    value.
 
 ### Fixed
 
 -   Issue where saving to an XML file would result in missing fields.
--   Issue where `false` and `0` values would not be correctly saved in the XML
-    file.
 -   Issue with the saving mechanism of the cluster extension to ensure that
     `deviceType` is excluded if it does not have all required non-default
     values.
@@ -39,11 +39,6 @@
     items.
 -   Issue with incorrect storage of the `name` field for each item in the XML
     file.
-
-### Removed
-
--   The "array" type from the type list, which was replaced by the new button
-    for marking a field as an array.
 
 ## 0.1.0 - 2025-06-24
 

@@ -37,7 +37,7 @@ The buttons in this section let you load Matter cluster XML files and save them.
 
 ### XML Cluster Extension File
 
-This tab includes the **Save extension to file** button, which checks the difference between the current filled-in values and the loaded cluster and saves the difference to an XML file.
+This section includes the **Save extension to file** button, which checks the difference between the current filled-in values and the loaded cluster and saves the difference to an XML file.
 
 The {{app_name}} automatically compares your current cluster with the originally loaded cluster and saves only the differences as an extension file. This means the following:
 
@@ -45,31 +45,25 @@ The {{app_name}} automatically compares your current cluster with the originally
 - Modified elements are included with their new values.
 - Unchanged elements are not included in the extension.
 
-If there is no difference, the tool shows a notification indicating that there is no data to create a cluster extension, as in the following figure:
-
-![Save extension no difference](./screenshots/matter_cluster_tool_save_extension_no_difference.png "Save extension no difference")
+If there is no difference, the tool shows a notification indicating that there is no data to create a cluster extension.
 
 ### Utility
 
-This tab includes utilities mechanism that you can use to manipulate edited data.
+This section includes buttons that you can use to manipulate edited data.
 
-Currently the following utilities are supported:
+![Utility section](./screenshots/matter_cluster_tool_utilities.png "Utility section")
 
-* **Clear All**
-
-  ![Utiities](./screenshots/matter_cluster_tool_utilities.png "Utiities")
-
-  Use this button to wipe all data stored in the current window and reset the application to its initial state. This operation cannot be undone, so the following message appears:
-
-  ![Warning before clearing all data](./screenshots/matter_cluster_tool_warning_before_clearing_all_data.png "Warning before clearing all data")
+| Button                   | Description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| **Clear all**            | Wipes all data stored in the current window and resets the application to its initial state.<br/><br/>**Note:** This operation cannot be undone. |
 
 ### Loaded file
 
-This tab shows a name of the currently loaded file.
+This section shows the name of the currently loaded file.
 
 ### Elements in the file
 
-If an XML file contains multiple device types, clusters, or cluster extensions, all correctly recognized elements will appear in this section.
+This section displays all correctly recognized elements in the currently loaded XML file (multiple device types, clusters, or cluster extensions).
 
 Depending on the contents of the loaded file, this section can display up to three separate lists:
 
@@ -78,16 +72,14 @@ Depending on the contents of the loaded file, this section can display up to thr
 | List name        | Description                                                        |
 |------------------|--------------------------------------------------------------------|
 | **Clusters**     | This list displays all clusters found in the file.                 |
-| **Device Types** | This list displays all device types found in the file.             |
+| **Device Types** | This list displays all device types found in the file.<br/><br/>![Multiple device types](./screenshots/matter_cluster_tool_multiple_device_types.png "Multiple device types")  |
 | **Extensions**   | This list displays all cluster extensions found in the file.       |
 
-For example, if the file contains multiple device types, you can see a similar list to the following one:
+Click an item in one of the lists to open and edit it in the main window. You can edit only one cluster or cluster extension in the main window at a time.
 
-![Multiple device types](./screenshots/matter_cluster_tool_multiple_device_types.png "Multiple device types")
-
-Click an item in one of the lists to open and edit it in the main window.
-Please note: You can only edit one cluster or cluster extension in the main window at a time.
-If you want to make changes to a different item, simply select it from the list, your changes will be preserved and you can switch between items freely.
+!!! info "Tip"
+    If you want to make changes to a different item, select it from the list.
+    Changes you have made to the current item are preserved, and you can switch between items freely.
 
 ## Main window
 
@@ -222,7 +214,7 @@ When you click this button, the edit box dialog appears.
 | **Code**      | A text input field for the attribute code.                                       | Yes      |
 | **Define**    | A text input field for the attribute definition.                                 | Yes      |
 | **Type**      | A combined text input and drop-down field for selecting the data type.                              | Yes      |
-| **Length**      | A text input field for the attribute. length.                                                            | No       |
+| **Length**      | A text input field for the attribute length.                                                      | No       |
 | **Min**         | A text input field for the minimum value of the attribute. Only valid for the numeric data types.                                                               | No       |
 | **Max**         | A text input field for the maximum value of the attribute. Must be higher than **Min**. Only valid for the numeric data types.                                                               | No       |
 | **Default**     | A text input field for the default value of the attribute. Must be the same as **Type**. | No       |
@@ -337,8 +329,8 @@ You can edit the following fields of the items entry.
 | **Field Id**        | A text input field for the numeric identifier of the item. The identifier must be unique within the structure. | Yes      |
 | **Name**      | A text input field for the item name. The name must be unique within the structure.                                         | Yes      |
 | **Type**      | A combined text input and drop-down field for selecting the data type of the item. The data type list is populated from the Matter Data Model template.                                         | Yes      |
-| **Length**   | Length of the item in bytes. Applies only to the `array` data type. Must be higher than **Min Length**.  | No       |
-| **Min Length**   | Minimum allowed length of the item in bytes. Applies only to the `array` data type. | No       |
+| **Length**   | Length of the item in bytes. Applies only to the `array`, and `composite` data type. Must be higher than 0 and **Min Length**.  | No       |
+| **Min Length**   | Minimum allowed length of the item in bytes. Applies only to the `array`, and `composite` data type. Must be higher than 0. | No       |
 | **Min**   | The minimum allowed value of the item. Applies only to the numeric data types. The minimum value must be smaller than **Max** value and must fit in the numeric type bounds.  | No       |
 | **Max**   | The maximum allowed value of the item. Applies only to the numeric data types. The maximum value must be greater than **Min** value and must fit in the numeric type bounds.  | No       |
 | **Is Nullable** | Toggle button to define whether the item can be null (toggle enabled) or not (toggle disabled).     | No       |
@@ -550,29 +542,17 @@ Given that the {{app_name}} does not interact with any devices, it does not use 
 
 ## Notifications
 
-The tool validates that all required fields are filled before saving. If required fields are not filled, you will see an error message when trying to save the element:
+The tool validates that all required fields are filled before saving.
 
-![Edit window error](./screenshots/matter_cluster_tool_edit_box_error.png "Edit window error")
+This can lead to different types of notifications, for example asking you to fill in the required fields or setting the required values.
 
-If there are no differences between the current cluster and the loaded cluster, the tool shows a message indicating no data to create an extension:
-
-![Save extension no difference](./screenshots/matter_cluster_tool_save_extension_no_difference.png "Save extension no difference")
-
-If the loaded XML file does have elements that have not defined all mandatory fields, the tool show a message indicating all of them to inform user that the missing values were replaced with the default values:
-
-![Missing configuration](./screenshots/matter_cluster_tool_missing_configuration.png "Missing configuration")
+### Save options
 
 If the loaded XML file contains multiple elements, while saving cluster to file, the tool shows a message to choose a ways of saving:
 
 ![Save options](./screenshots/matter_cluster_tool_save_options.png "Save options")
 
-The first option **Save only the edited element** saves only the current device type and/or cluster.
-The second option **Save all data from original file with your edits** saves all loaded data with all modifications that you provided.
-
-If you choose one of the array types, then you must set the **Length** field bigger than 0. If it is set to 0, the following message appears:
-
-![Wrong array](./screenshots/matter_cluster_tool_wrong_array.png "Wrong array")
-
-If you choose one of the numerical types, then the **Max** value must be bigger thatn **Min** value. If the condition is not met, the following message appears:
-
-![Wrong max size](./screenshots/matter_cluster_tool_wrong_max_size.png "Wrong max size")
+| Option | Description |
+|--------|-------------|
+| **Save only the currently selected device type** | Saves only the current device type or cluster (or both). |
+| **Save all data from original file with your edits** | Saves all loaded data with all modifications that you provided. |
