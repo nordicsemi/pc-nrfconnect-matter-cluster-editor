@@ -6,6 +6,7 @@
 
 import ClusterFile from '../Components/ClusterFile';
 import eventEmitter from '../Components/EventEmitter';
+import { deepClone } from '../Components/Utils';
 import { defaultXMLConfigurator, defaultXMLFile } from '../defaults';
 import { XMLExtensionConfigurator } from '../defines';
 
@@ -17,12 +18,12 @@ import { XMLExtensionConfigurator } from '../defines';
  * @returns {void}
  */
 export const resetClusterFileState = (): void => {
-    // Reset instances to defaults (using direct reference to preserve HexString instances)
-    ClusterFile.XMLCurrentInstance = defaultXMLConfigurator;
-    ClusterFile.XMLBaseInstance = defaultXMLConfigurator;
+    // Reset instances to defaults (using deep clones to avoid reference sharing)
+    ClusterFile.XMLCurrentInstance = deepClone(defaultXMLConfigurator);
+    ClusterFile.XMLBaseInstance = deepClone(defaultXMLConfigurator);
 
     // Reset file to default structure
-    ClusterFile.file = defaultXMLFile;
+    ClusterFile.file = deepClone(defaultXMLFile);
 
     // Clear extension file (no default available in defaults.ts)
     ClusterFile.extensionFile = {} as XMLExtensionConfigurator;

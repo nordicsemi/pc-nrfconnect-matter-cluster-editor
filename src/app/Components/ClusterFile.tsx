@@ -91,13 +91,17 @@ class ClusterFile {
      * The current instance of the cluster file.
      * This instance is used to track the changes provided by the user.
      */
-    static XMLCurrentInstance: XMLConfigurator = defaultXMLConfigurator;
+    static XMLCurrentInstance: XMLConfigurator = deepClone(
+        defaultXMLConfigurator
+    );
 
     /**
      * The base instance of the cluster file.
      * This instance is used to compare the changes with the original file to generate the cluster extension.
      */
-    static XMLBaseInstance: XMLConfigurator = defaultXMLConfigurator;
+    static XMLBaseInstance: XMLConfigurator = deepClone(
+        defaultXMLConfigurator
+    );
 
     static XMLDefaultInstance: XMLConfigurator = deepClone(
         defaultXMLConfigurator
