@@ -83,8 +83,18 @@ const CommandsTable: React.FC<{ active: boolean }> = () => {
         />
     );
 
+    const clearFields = (command: XMLCommand) => {
+        // Remove redundant boolean fields if they are not set to true
+        command.$.optional = command.$.optional || undefined;
+        command.$.disableDefaultResponse =
+            command.$.disableDefaultResponse || undefined;
+    };
+
     const saveAllCommandRows = (commands: XMLCommand[]) => {
         ClusterFile.XMLCurrentInstance.cluster.command = commands;
+        commands.forEach(command => {
+            clearFields(command);
+        });
     };
 
     return (

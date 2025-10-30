@@ -79,8 +79,23 @@ const EventsTable: React.FC<{ active: boolean }> = () => {
         />
     );
 
+    const clearFields = (event: XMLEvent) => {
+        // Remove redundant boolean fields if they are not set to true
+        event.$.optional = event.$.optional || undefined;
+
+        // Clear fields for each field in the event
+        if (event.field) {
+            event.field.forEach(field => {
+                field.$.array = field.$.array || undefined;
+            });
+        }
+    };
+
     const saveAllEventRows = (elements: XMLEvent[]) => {
         ClusterFile.XMLCurrentInstance.cluster.event = elements;
+        elements.forEach(event => {
+            clearFields(event);
+        });
     };
 
     return (

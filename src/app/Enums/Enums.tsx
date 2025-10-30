@@ -81,8 +81,16 @@ const EnumsTable: React.FC<{ active: boolean }> = () => {
         />
     );
 
+    const clearFields = (enumItem: XMLEnum) => {
+        // Remove redundant boolean fields if they are not set to true
+        enumItem.$.array = enumItem.$.array || undefined;
+    };
+
     const saveAllEnumRows = (elements: XMLEnum[]) => {
         ClusterFile.XMLCurrentInstance.enum = elements;
+        elements.forEach(enumItem => {
+            clearFields(enumItem);
+        });
     };
 
     return (

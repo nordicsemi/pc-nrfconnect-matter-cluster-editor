@@ -10,6 +10,7 @@ import ClusterFile from '../Components/ClusterFile';
 import Component from '../Components/Component';
 import { defaultXMLStruct } from '../defaults';
 import { XMLStruct } from '../defines';
+import { isTypeNumeric } from '../matterTypes';
 import StructDetails from './StructDetail';
 import StructEdit from './StructEdit';
 
@@ -71,8 +72,39 @@ const StructTable: React.FC<{ active: boolean }> = () => {
         return [];
     };
 
+    const clearFields = (structItem: XMLStruct) => {
+        // Remove redundant boolean fields if they are not set to true
+        structItem.$.isFabricScoped = structItem.$.isFabricScoped || undefined;
+
+        // Clear fields for each item in the struct
+        if (structItem.item) {
+            structItem.item.forEach(item => {
+                // Remove redundant boolean fields if they are not set to true
+                item.$.array = item.$.array || undefined;
+                item.$.isNullable = item.$.isNullable || undefined;
+                item.$.isFabricSensitive =
+                    item.$.isFabricSensitive || undefined;
+
+                // For non-numeric types we cannot have min and max values
+                if (!isTypeNumeric(item.$.type)) {
+                    item.$.min = undefined;
+                    item.$.max = undefined;
+                }
+
+                // For non-array types we cannot have length or minLength values
+                if (!item.$.array) {
+                    item.$.length = undefined;
+                    item.$.minLength = undefined;
+                }
+            });
+        }
+    };
+
     const saveAllStructRows = (structs: XMLStruct[]) => {
         ClusterFile.XMLCurrentInstance.struct = structs;
+        structs.forEach(structItem => {
+            clearFields(structItem);
+        });
     };
 
     const createDetails = (structItem: XMLStruct) => (

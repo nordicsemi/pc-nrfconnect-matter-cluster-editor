@@ -13,7 +13,10 @@ import EditBox from '../Components/Edit/EditBox';
 import ElementListEdit from '../Components/Edit/ElementListEdit';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
-import { defaultXMLDeviceClusterFeatures } from '../defaults';
+import {
+    defaultXMLDeviceClusterFeatures,
+    defaultXMLDeviceClusterInclude,
+} from '../defaults';
 import { FeatureValuesType, XMLDeviceClusterInclude } from '../defines';
 
 type XMLDeviceClusterIncludeType = XMLDeviceClusterInclude['$'];
@@ -138,6 +141,7 @@ const DeviceTypeEdit: React.FC<EditRowWrapper<XMLDeviceClusterInclude>> = ({
                 'Fields marked with * are mandatory to be filled.'
             }
             mainTitle="Describe the cluster to be assigned to the device type here."
+            defaultPrototype={defaultXMLDeviceClusterInclude.$}
         >
             <Box sx={{ display: 'flex', gap: 2 }}>
                 <ElementListEdit

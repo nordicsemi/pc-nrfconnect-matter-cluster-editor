@@ -24,6 +24,12 @@ function parseNumbersAndHex(
         return null;
     }
 
+    // Skip boolean strings - let parseBooleans handle them
+    const lowerStr = String(hexString).toLowerCase();
+    if (lowerStr === 'true' || lowerStr === 'false') {
+        return hexString;
+    }
+
     if (
         String(hexString).startsWith('0x') ||
         String(hexString).startsWith('0X')

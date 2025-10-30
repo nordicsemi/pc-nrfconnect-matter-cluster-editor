@@ -127,6 +127,14 @@ const DeviceType: React.FC = () => {
         return [];
     };
 
+    const clearFields = (include: XMLDeviceClusterInclude) => {
+        // Remove redundant boolean fields if they are not set to true
+        include.$.client = include.$.client || undefined;
+        include.$.server = include.$.server || undefined;
+        include.$.clientLocked = include.$.clientLocked || undefined;
+        include.$.serverLocked = include.$.serverLocked || undefined;
+    };
+
     const saveAllRows = (elements: XMLDeviceClusterInclude[]) => {
         if (ClusterFile.XMLCurrentInstance.deviceType) {
             // Ensure clusters structure exists
@@ -136,6 +144,11 @@ const DeviceType: React.FC = () => {
                     include: [],
                 };
             }
+            // Clean up fields before saving
+            elements.forEach(include => {
+                clearFields(include);
+            });
+
             // Update include array
             ClusterFile.XMLCurrentInstance.deviceType.clusters.include =
                 elements;

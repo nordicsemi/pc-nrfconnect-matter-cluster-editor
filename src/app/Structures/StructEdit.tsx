@@ -10,7 +10,11 @@ import { Box } from '@mui/material';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
-import { defaultXMLClusterCode, defaultXMLStructItem } from '../defaults';
+import {
+    defaultXMLClusterCode,
+    defaultXMLStruct,
+    defaultXMLStructItem,
+} from '../defaults';
 import { XMLClusterCode, XMLStruct, XMLStructItem } from '../defines';
 import { globalMatterTypes, isTypeNumeric } from '../matterTypes';
 
@@ -117,7 +121,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
                 "The flag indicating if the item can be set to NULL. The valid values are 'true' and 'false'.",
             isFabricSensitive:
                 "The flag indicating if the item is fabric sensitive, which means it can be treated differently depending on the specific fabric. The valid values are 'true' and 'false'.",
-            array: "The flag indicating if the item is an array. If it is set to 'true', the type field represents the type of the array elements.",
+            array: "The flag indicating if the struct item is an array. The valid values are 'true' and 'false'. If the struct item is an array, the storage type is fixed to 'External. It means that the Struct item will not be generated automatically, and you will need to provide a custom implementation of the struct item.",
         };
         return tooltips[field] || '';
     };
@@ -171,6 +175,17 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
         return false;
     };
 
+    const handleAutomateActions = useCallback(
+        (field: keyof StructItemType, value: StructItemType) => {
+            if (field === 'type' && value.type && value.type === 'array') {
+                return { array: true };
+            }
+            return undefined;
+        },
+        []
+    );
+    undefined;
+
     return (
         <EditBox<StructType>
             value={localStruct.$}
@@ -182,6 +197,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
             onTooltipDisplay={handleFieldTooltip}
             isOptional={handleOptionalField}
             isDisabled={() => false}
+            defaultPrototype={defaultXMLStruct.$}
         >
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
                 <InnerElementEdit
@@ -196,6 +212,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
                     isOptional={handleOptionalItem}
                     defaultPrototype={defaultXMLStructItem.$}
                     isDisabled={handleFieldDisabled}
+                    automateActions={handleAutomateActions}
                     treatAsHex={(field: keyof StructItemType) =>
                         field === 'fieldId'
                     }

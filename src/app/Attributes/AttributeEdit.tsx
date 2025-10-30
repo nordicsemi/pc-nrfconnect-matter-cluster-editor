@@ -9,14 +9,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
-import { defaultXMLClusterAccess } from '../defaults';
+import { defaultXMLAttribute, defaultXMLClusterAccess } from '../defaults';
 import { XMLAttribute, XMLClusterAccess } from '../defines';
 import {
     accessOptions,
     apiMaturityOptions,
     clientServerOptions,
     globalMatterTypes,
-    isTypeArray,
     isTypeNumeric,
     roleOptions,
 } from '../matterTypes';
@@ -122,7 +121,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
                 "The API maturity level of the attribute. The valid values are 'provisional', 'internal', 'stable', and 'deprecated'. This field is optional and items without it are considered to be stable.",
             description:
                 'The attribute description that explains the purpose of the attribute and its use cases.',
-            array: "The flag indicating if the attribute is an array. The valid values are 'true' and 'false'.",
+            array: "The flag indicating if the attribute is an array. The valid values are 'true' and 'false'. If the attribute is an array, the storage type is fixed to 'External. It means that the Attribute will not be generated automatically, and you will need to provide a custom implementation of the attribute.",
         };
         return tooltips[field] || '';
     };
@@ -178,7 +177,11 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
 
     const handleDisabled = (field: string, items: AttributeValuesType) => {
         if (field === 'length') {
-            if (items.array === true || String(items.array) === 'true') {
+            if (
+                items.array === true ||
+                String(items.array) === 'true' ||
+                items.type === 'array'
+            ) {
                 return false;
             }
             return true;
@@ -197,7 +200,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
 
     const handleAutomateActions = useCallback(
         (field: keyof AttributeValuesType, value: AttributeValuesType) => {
-            if (field === 'type' && value.type && isTypeArray(value.type)) {
+            if (field === 'type' && value.type && value.type === 'array') {
                 return { array: true };
             }
             return undefined;
@@ -226,6 +229,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
                 side: clientServerOptions,
                 apiMaturity: apiMaturityOptions,
             }}
+            defaultPrototype={defaultXMLAttribute.$}
         >
             <InnerElementEdit
                 buttonLabel="Accesses"

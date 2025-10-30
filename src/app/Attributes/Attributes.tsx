@@ -10,6 +10,7 @@ import ClusterFile from '../Components/ClusterFile';
 import Component from '../Components/Component';
 import { defaultXMLAttribute } from '../defaults';
 import { XMLAttribute } from '../defines';
+import { isTypeNumeric } from '../matterTypes';
 import AttributeDetails from './AttributeDetails';
 import AttributeEdit from './AttributeEdit';
 
@@ -87,18 +88,39 @@ const AttributesTable: React.FC<{ active: boolean }> = () => {
         />
     );
 
+    const clearFields = (attribute: XMLAttribute) => {
+        if (!attribute._) {
+            attribute._ = attribute.description || attribute.$.name;
+        }
+        delete attribute.description;
+        attribute.$.name = attribute._;
+        delete attribute._;
+
+        // Remove redundant boolean fields if they are not set to true
+        attribute.$.array = attribute.$.array || undefined;
+        attribute.$.isNullable = attribute.$.isNullable || undefined;
+        attribute.$.optional = attribute.$.optional || undefined;
+        attribute.$.reportable = attribute.$.reportable || undefined;
+        attribute.$.writable = attribute.$.writable || undefined;
+        attribute.$.apiMaturity = attribute.$.apiMaturity || undefined;
+
+        // For non-numeric types we cannot have min and max values
+        if (!isTypeNumeric(attribute.$.type)) {
+            attribute.$.min = undefined;
+            attribute.$.max = undefined;
+        }
+
+        // For non-array types we cannot have a length value
+        if (!attribute.$.array) {
+            attribute.$.length = undefined;
+        }
+    };
+
     const saveAllAttributeRows = (attributes: XMLAttribute[]) => {
         ClusterFile.XMLCurrentInstance.cluster.attribute = attributes;
         // Synchronize description, name and _ which contains the same values.
         attributes.forEach(attribute => {
-            if (!attribute._) {
-                attribute._ = attribute.description || attribute.$.name;
-            }
-
-            // Remove redundant description and name fields, because we are using the _ field
-            delete attribute.description;
-            attribute.$.name = attribute._;
-            delete attribute._;
+            clearFields(attribute);
         });
     };
 

@@ -88,6 +88,7 @@ export interface EditBoxProps<T> {
     dropdownFields?: { [key in keyof T]?: readonly string[] };
     displayNote?: string;
     mainTitle?: string;
+    defaultPrototype: T;
 }
 
 /**
@@ -165,6 +166,7 @@ const EditBox = <T,>({
     dropdownFields = {},
     displayNote = 'Fields marked with * are mandatory to be filled. ',
     mainTitle = 'Edit the details here.',
+    defaultPrototype,
 }: EditBoxProps<T>) => {
     const [localValue, setLocalValue] = useState<T>(value);
     const [mandatoryCheckWarningOpen, mandatoryCheckWarningOpenSet] =
@@ -177,6 +179,20 @@ const EditBox = <T,>({
     useEffect(() => {
         setLocalValue(value);
     }, [value]);
+
+    const getAllFieldKeys = (elem: T): (keyof T)[] => {
+        const elemKeys = Object.keys(elem as object) as (keyof T)[];
+        const protoKeys = Object.keys(
+            defaultPrototype as object
+        ) as (keyof T)[];
+        const merged = new Set<keyof T>([...protoKeys, ...elemKeys]);
+        return Array.from(merged);
+    };
+
+    const getFieldValue = (elem: T, field: keyof T) => {
+        const v = elem[field];
+        return v !== undefined ? v : (defaultPrototype as any)[field];
+    };
 
     const handleChange = useCallback(
         (field: keyof T, fieldValue: any): void => {
@@ -235,7 +251,9 @@ const EditBox = <T,>({
         const dropdownOptions = dropdownFields[field];
         const isHexField = treatAsHex && treatAsHex(field as keyof T);
 
-        if (typeof val === 'boolean') {
+        // Check if this field is a boolean in the prototype (to handle string "true"/"false" from XML)
+        const prototypeValue = (defaultPrototype as any)[field];
+        if (typeof val === 'boolean' || typeof prototypeValue === 'boolean') {
             return null;
         }
 
@@ -244,7 +262,7 @@ const EditBox = <T,>({
                 <TypeField
                     key={String(field)}
                     field={camelCaseToTitle(String(field))}
-                    value={val as string}
+                    value={getFieldValue(localValue, field) as string}
                     availableTypes={typeFields[field] as string[]}
                     required={!isOptional(field, localValue)}
                     disabled={isDisabled(field, localValue)}
@@ -259,7 +277,7 @@ const EditBox = <T,>({
                 <DropdownField
                     key={String(field)}
                     field={camelCaseToTitle(String(field))}
-                    value={val as string}
+                    value={getFieldValue(localValue, field) as string}
                     options={dropdownOptions}
                     required={!isOptional(field)}
                     disabled={isDisabled(field, localValue)}
@@ -273,7 +291,12 @@ const EditBox = <T,>({
             <TextInputField
                 key={String(field)}
                 field={camelCaseToTitle(String(field))}
-                value={val as string | number | HexString}
+                value={
+                    getFieldValue(localValue, field) as
+                        | string
+                        | number
+                        | HexString
+                }
                 required={!isOptional(field)}
                 disabled={isDisabled(field, localValue)}
                 tooltip={onTooltipDisplay(field)}
@@ -284,13 +307,29 @@ const EditBox = <T,>({
     };
 
     const renderBooleanFields = () => {
-        const booleanFields = Object.entries(localValue as object)
-            .filter(([, val]) => typeof val === 'boolean')
-            .map(([field]) => field as keyof T);
+        const allKeys = getAllFieldKeys(localValue);
+        const booleanFields = allKeys.filter(field => {
+            const v = getFieldValue(localValue, field);
+            const prototypeValue = (defaultPrototype as any)[field];
+            return (
+                typeof v === 'boolean' || typeof prototypeValue === 'boolean'
+            );
+        });
 
         if (booleanFields.length === 0) {
             return null;
         }
+
+        // Helper function to convert string "true"/"false" to boolean
+        const toBooleanValue = (val: any): boolean => {
+            if (typeof val === 'boolean') {
+                return val;
+            }
+            if (typeof val === 'string') {
+                return val.toLowerCase() === 'true';
+            }
+            return false;
+        };
 
         return (
             <Box className="booleanFieldsGrid">
@@ -300,7 +339,9 @@ const EditBox = <T,>({
                             <BooleanField
                                 key={String(field)}
                                 field={camelCaseToTitle(String(field))}
-                                value={localValue[field] as boolean}
+                                value={toBooleanValue(
+                                    getFieldValue(localValue, field)
+                                )}
                                 required={!isOptional(field)}
                                 disabled={isDisabled(field, localValue)}
                                 tooltip={onTooltipDisplay(field)}
@@ -340,7 +381,7 @@ const EditBox = <T,>({
                             {displayNote}
                         </div>
                         <div className="tw-flex tw-min-w-[500px] tw-flex-col tw-justify-center tw-gap-4">
-                            {Object.keys(value as object).map(field =>
+                            {getAllFieldKeys(localValue).map(field =>
                                 renderField(field as keyof T)
                             )}
                             {renderBooleanFields()}

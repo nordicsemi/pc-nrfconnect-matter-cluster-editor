@@ -199,10 +199,3 @@ export const isTypeNumeric = (type: string) =>
     type === 'int64s' ||
     type === 'single' ||
     type === 'double';
-
-export const isTypeArray = (type: string) =>
-    type === 'octet_string' ||
-    type === 'utf8_string' ||
-    type === 'long_char_string' ||
-    type === 'char_string' ||
-    type === 'long_octet_string';

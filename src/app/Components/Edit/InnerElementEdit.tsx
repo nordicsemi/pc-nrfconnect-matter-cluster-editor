@@ -7,7 +7,7 @@
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
@@ -130,6 +130,15 @@ export interface InnerElementEditProps<T> {
      * @returns {string} The invalid messages for the field
      */
     getInvalidMessages?: (field: keyof T) => string;
+    /**
+     * A callback function to automate actions for a given field.
+     *
+     * @callback automateActions
+     * @param {keyof T} field - The field that is being checked if it should be automated
+     * @param {T} value - The value of the field
+     * @returns {T} The automated value for the field
+     */
+    automateActions?: (field: keyof T, value: T) => Partial<T> | void;
     defaultPrototype: T;
     typeFields?: {
         [K in keyof T]?: readonly string[];
@@ -229,6 +238,7 @@ const InnerElementEdit = <T,>({
     typeFields,
     children,
     treatAsHex,
+    automateActions,
 }: InnerElementEditProps<T>) => {
     const [internalList, setInternalList] = useState<T[]>(elements);
     const [showInnerElementEdit, setShowInnerElementEdit] =
@@ -260,19 +270,36 @@ const InnerElementEdit = <T,>({
             )
         );
 
-    const handleFieldChange = (index: number, field: keyof T, value: any) => {
-        const updatedElementList = [...internalList];
-        if (treatAsHex && treatAsHex(field as keyof T)) {
-            value = new HexString(value);
-        }
-        if (updatedElementList[index][field] !== value) {
-            updatedElementList[index] = {
-                ...updatedElementList[index],
-                [field]: value,
-            };
-        }
-        setInternalList(updatedElementList);
-    };
+    const handleFieldChange = useCallback(
+        (index: number, field: keyof T, value: any) => {
+            const updatedElementList = [...internalList];
+            if (treatAsHex && treatAsHex(field as keyof T)) {
+                value = new HexString(value);
+            }
+            if (updatedElementList[index][field] !== value) {
+                updatedElementList[index] = {
+                    ...updatedElementList[index],
+                    [field]: value,
+                };
+            }
+            setInternalList(updatedElementList);
+
+            // Call automateActions if provided and apply any automated updates
+            if (automateActions) {
+                const automatedUpdates = automateActions(
+                    field,
+                    updatedElementList[index]
+                );
+                if (automatedUpdates) {
+                    updatedElementList[index] = {
+                        ...updatedElementList[index],
+                        ...automatedUpdates,
+                    };
+                }
+            }
+        },
+        [internalList, automateActions, treatAsHex]
+    );
 
     const allChecksPassed = () =>
         internalList.every(element =>

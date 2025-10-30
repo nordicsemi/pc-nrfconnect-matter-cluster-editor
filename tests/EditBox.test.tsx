@@ -45,6 +45,7 @@ describe('EditBox component', () => {
         overrides: Partial<EditBoxProps<TestObject>> = {}
     ): EditBoxProps<TestObject> => ({
         value: defaultTestObject,
+        defaultPrototype: defaultTestObject,
         onCancel: jest.fn(),
         onSave: jest.fn(),
         onTooltipDisplay: field => `Tooltip for ${field}`,

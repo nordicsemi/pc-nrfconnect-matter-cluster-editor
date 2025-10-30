@@ -12,6 +12,7 @@ import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
 import {
     defaultXMLClusterAccess,
+    defaultXMLCommand,
     defaultXMLCommandArgument,
 } from '../defaults';
 import {
@@ -113,7 +114,7 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
                 "The flag indicating if the argument can be null. The valid values are 'true' and 'false'.",
             optional:
                 "The flag indicating if the command is optional or mandatory. The valid values are 'true' and 'false'.",
-            array: "The flag indicating if the argument is an array. The valid values are 'true' and 'false'.",
+            array: "The flag indicating if the command value is an array. The valid values are 'true' and 'false'. If the command value is an array, the storage type is fixed to 'External. It means that the Command value will not be generated automatically, and you will need to provide a custom implementation of the command.",
         };
         return tooltips[field] || '';
     };
@@ -135,6 +136,15 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
         return tooltips[field] || '';
     };
 
+    const handleAutomateActions = useCallback(
+        (field: keyof ArgumentCommandType, value: ArgumentCommandType) => {
+            if (field === 'type' && value.type && value.type === 'array') {
+                return { array: true };
+            }
+            return undefined;
+        },
+        []
+    );
     const handleOptionalArgument = (field: string) => {
         if (field === 'name' || field === 'type') {
             return false;
@@ -166,6 +176,7 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
                 source: clientServerOptions,
             }}
             treatAsHex={(field: keyof CommandValuesType) => field === 'code'}
+            defaultPrototype={defaultXMLCommand.$}
         >
             <Tooltip
                 title={handleFieldTooltip('description')}
@@ -198,6 +209,7 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
                     onTooltipDisplay={handleArgumentTooltip}
                     isOptional={handleOptionalArgument}
                     defaultPrototype={defaultXMLCommandArgument.$}
+                    automateActions={handleAutomateActions}
                     typeFields={{
                         type: globalMatterTypes,
                     }}

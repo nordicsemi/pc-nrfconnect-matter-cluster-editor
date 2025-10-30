@@ -10,7 +10,11 @@ import { Box } from '@mui/material';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
-import { defaultXMLClusterCode, defaultXMLEnumItem } from '../defaults';
+import {
+    defaultXMLClusterCode,
+    defaultXMLEnum,
+    defaultXMLEnumItem,
+} from '../defaults';
 import { XMLClusterCode, XMLEnum, XMLEnumItem } from '../defines';
 import { loadMatterTypes } from '../matterTypes';
 
@@ -124,7 +128,7 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
         const tooltips: { [key: string]: string } = {
             name: 'The name of the enum. It shall be unique within the cluster.',
             type: 'The data type of the attribute. The valid values are listed in the src/app/zap-templates/zcl/data-model/chip/chip-types.xml file, relative to the Matter project root directory.',
-            array: "The flag indicating if the enum is an array. If it is set to 'true', the type field represents the type of the array elements.",
+            array: "The flag indicating if the enum value is an array. The valid values are 'true' and 'false'. If the enum value is an array, the storage type is fixed to 'External. It means that the Enum value will not be generated automatically, and you will need to provide a custom implementation of the enum.",
         };
         return tooltips[field] || '';
     };
@@ -135,6 +139,16 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
         }
         return false;
     };
+
+    const handleAutomateActions = useCallback(
+        (field: keyof EnumType, value: EnumType) => {
+            if (field === 'type' && value.type && value.type === 'array') {
+                return { array: true };
+            }
+            return undefined;
+        },
+        []
+    );
 
     return (
         <EditBox<EnumType>
@@ -147,9 +161,11 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
             isOptional={handleOptionalField}
             isDisabled={() => false}
             onCancel={onCancel}
+            automateActions={handleAutomateActions}
             typeFields={{
                 type: availableTypes,
             }}
+            defaultPrototype={defaultXMLEnum.$}
         >
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
                 <InnerElementEdit

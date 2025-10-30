@@ -11,7 +11,7 @@ import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import TextInputField from '../Components/Edit/TextInputField';
 import { EditRowWrapper } from '../Components/TableRow';
-import { defaultXMLEventField } from '../defaults';
+import { defaultXMLEvent, defaultXMLEventField } from '../defaults';
 import { HexString, XMLEvent, XMLEventField } from '../defines';
 import {
     clientServerOptions,
@@ -147,6 +147,7 @@ const EventEdit: React.FC<EditRowWrapper<XMLEvent>> = ({
                 priority: priorityOptions,
                 side: clientServerOptions,
             }}
+            defaultPrototype={defaultXMLEvent.$}
         >
             <TextInputField
                 field="Description"
