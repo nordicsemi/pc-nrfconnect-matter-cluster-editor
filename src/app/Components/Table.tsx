@@ -118,7 +118,7 @@ const ClusterTable = (
     }
 
     return (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ backgroundColor: '#f5f5f5' }}>
             {description && (
                 <div className="TableDescription">
                     {description}
@@ -133,20 +133,14 @@ const ClusterTable = (
             <Table aria-label="cluster table template">
                 <TableHead>
                     <TableRow>
-                        <TableCell />
-                        <TableCell sx={{ width: '30%' }} align="center">
-                            {firstHeader}
-                        </TableCell>
+                        <TableCell sx={{ width: '60px' }} />
+                        <TableCell>{firstHeader}</TableCell>
                         {remainingHeaders.map(header => (
                             <TableCell key={header} align="center">
                                 {header}
                             </TableCell>
                         ))}
-                        <TableCell
-                            key="Action"
-                            sx={{ width: '10%' }}
-                            align="center"
-                        >
+                        <TableCell key="Action" sx={{ width: '100px' }}>
                             Action
                         </TableCell>
                     </TableRow>

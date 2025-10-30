@@ -239,7 +239,7 @@ const Row = <T,>({
             <TableRow>
                 <TableCell
                     style={{ paddingBottom: 0, paddingTop: 0 }}
-                    colSpan={cells.length}
+                    colSpan={cells.length + 2}
                 >
                     <Collapse in={openDetails} timeout="auto" unmountOnExit>
                         {detailsBox}

@@ -65,19 +65,19 @@ const AttributeDetails: React.FC<XMLAttribute> = ({ $, access }) => (
             <strong>C/C++ Define: </strong>
             {$.define}
         </DetailsItem>
-        {$.apiMaturity && (
+        {$.apiMaturity != null && (
             <DetailsItem>
                 <strong>Api Maturity: </strong>
                 {$.apiMaturity}
             </DetailsItem>
         )}
-        {$.length && (
+        {$.length != null && (
             <DetailsItem>
                 <strong>Array length: </strong>
                 {$.length}
             </DetailsItem>
         )}
-        {($.min === 0 || $.min) && $.max && (
+        {($.min === 0 || $.min) && $.max != null && (
             <DetailsItem>
                 <strong>Range: </strong>
                 from {String($.min)} to {String($.max)}

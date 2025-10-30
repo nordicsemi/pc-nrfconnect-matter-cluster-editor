@@ -41,7 +41,7 @@ const ListPropertiesDetails: React.FC<ListPropertiesDetailsProps> = ({
         <div style={{ display: 'flex', gap: '8px' }}>
             {items.map(
                 item =>
-                    item && (
+                    item != null && (
                         <div key={item} style={{ width: 'fit-content' }}>
                             <DetailsItem>{item}</DetailsItem>
                         </div>

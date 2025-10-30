@@ -129,8 +129,8 @@ export const defaultXMLCommand: XMLCommand = {
 
 export const defaultXMLEvent: XMLEvent = {
     $: {
-        code: new HexString(0),
         name: '',
+        code: new HexString(0),
         side: '',
         priority: '',
         optional: false,

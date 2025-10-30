@@ -124,8 +124,16 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
         const tooltips: { [key: string]: string } = {
             name: 'The name of the enum. It shall be unique within the cluster.',
             type: 'The data type of the attribute. The valid values are listed in the src/app/zap-templates/zcl/data-model/chip/chip-types.xml file, relative to the Matter project root directory.',
+            array: "The flag indicating if the enum is an array. If it is set to 'true', the type field represents the type of the array elements.",
         };
         return tooltips[field] || '';
+    };
+
+    const handleOptionalField = (field: string) => {
+        if (field === 'array') {
+            return true;
+        }
+        return false;
     };
 
     return (
@@ -136,7 +144,7 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
                 handleValueChange(newValue);
             }}
             onTooltipDisplay={field => handleFieldTooltip(field)}
-            isOptional={() => false}
+            isOptional={handleOptionalField}
             isDisabled={() => false}
             onCancel={onCancel}
             typeFields={{

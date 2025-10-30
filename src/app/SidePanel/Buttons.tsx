@@ -367,13 +367,13 @@ const OpenSavePanelButtons = () => {
 
     useHotKey({
         hotKey: 'ctrl+o',
-        title: 'Load cluster or cluster extension',
+        title: 'Load from file',
         isGlobal: false,
         action: handleLoad,
     });
     useHotKey({
         hotKey: 'ctrl+s',
-        title: 'Save cluster to file',
+        title: 'Save to file',
         isGlobal: false,
         action: handleSave,
     });
@@ -420,7 +420,7 @@ const OpenSavePanelButtons = () => {
                     disabled={false}
                     className="w-100"
                 >
-                    Save cluster to file
+                    Save to file
                 </Button>
             </Overlay>
             <ValidationErrorsDialog

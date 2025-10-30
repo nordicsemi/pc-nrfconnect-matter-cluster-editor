@@ -70,6 +70,7 @@ const AttributesTable: React.FC<{ active: boolean }> = () => {
                     if (attribute.description) {
                         attribute._ = attribute.description;
                     }
+                    attribute._ = attribute.$.name;
                     attribute.description = attribute._;
                 }
             );

@@ -24,7 +24,7 @@ The buttons in this section let you load Matter cluster XML files and save them.
 | Button                   | Description                                                                                 |
 |--------------------------|---------------------------------------------------------------------------------------------|
 | **Load from file**       | Loads the cluster definition or cluster extension from an XML file.<br/><br/>Once you load a Matter cluster XML file, the [cluster name field](#cluster-name-field) above the XML Cluster File section changes to the name of the loaded cluster and all tabs are populated with the data from the loaded cluster.                           |
-| **Save cluster to file** | Saves the current cluster definition to an XML file.<br/><br/>This option is only available for new clusters.<br/><br/>The name should be unique across all available clusters in the Matter Data Model.  |
+| **Save to file** | Saves the current cluster definition to an XML file.<br/><br/>This option is only available for new clusters.<br/><br/>The name should be unique across all available clusters in the Matter Data Model.  |
 
 ### XML Cluster Extension File
 

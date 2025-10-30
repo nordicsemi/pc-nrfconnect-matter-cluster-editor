@@ -255,9 +255,9 @@ export interface XMLClusterAccess {
 
 export interface XMLEvent {
     $: {
+        name: string;
         code: HexString;
         side: string;
-        name: string;
         priority: string;
         optional?: boolean;
     };

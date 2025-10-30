@@ -72,11 +72,11 @@ const DetailsBox = <T,>({
         innerElements ? new Array(innerElements.length).fill(false) : []
     );
     return (
-        <Box sx={{ margin: 1 }}>
+        <Box sx={{ margin: 1, width: '100%' }}>
             <Typography variant="h6" gutterBottom component="div">
                 Details
             </Typography>
-            <Box sx={{ width: '100%' }}>
+            <Box>
                 {description && (
                     <DetailsItem>
                         <strong>Description:</strong> {description}

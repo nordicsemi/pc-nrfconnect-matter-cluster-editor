@@ -319,7 +319,7 @@ const DeviceType: React.FC = () => {
                 loadAllRows={loadAllRows}
                 saveAllRows={saveAllRows}
                 emptyElement={defaultXMLDeviceClusterInclude}
-                description="A device type may specify optional clusters that are recommended as enhancements. Here you can assign or remove clusters from the device type."
+                description="Here you can assign or remove clusters and their properties that will be set automatically for this device type."
             />
         </>
     );

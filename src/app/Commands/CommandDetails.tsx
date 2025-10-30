@@ -80,7 +80,7 @@ const CommandDetails: React.FC<XMLCommand> = ({
             },
         ]}
     >
-        {$.response && (
+        {$.response != null && (
             <DetailsItem>
                 <strong>Response: </strong>
                 {$.response}

@@ -97,6 +97,7 @@ const TypeField: React.FC<TypeFieldProps> = ({
                             selectedItem={{ label: '', value: '' }}
                             transparentButtonBg
                             disabled={disabled}
+                            numItemsBeforeScroll={5}
                         />
                     </Box>
                 ) : (

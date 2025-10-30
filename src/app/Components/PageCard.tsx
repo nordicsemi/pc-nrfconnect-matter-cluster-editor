@@ -282,7 +282,7 @@ const PageCard = <T,>({
     };
 
     return (
-        <Card sx={{ margin: 2, backgroundColor: '#f5f5f5' }}>
+        <Card sx={{ marginBottom: 2, backgroundColor: '#f5f5f5' }}>
             <Typography variant="h4" align="center" sx={{ width: '100%' }}>
                 <Box sx={{ paddingY: 2, paddingLeft: 2, textAlign: 'left' }}>
                     {title}
@@ -297,7 +297,7 @@ const PageCard = <T,>({
                         color: 'text.secondary',
                     }}
                 >
-                    Click on any field to edit its value
+                    Click on any field to edit its value.
                     <br />
                     Fields marked with * are required.
                 </Typography>

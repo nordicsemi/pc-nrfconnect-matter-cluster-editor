@@ -12,7 +12,7 @@ import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
 import { defaultXMLClusterCode, defaultXMLStructItem } from '../defaults';
 import { XMLClusterCode, XMLStruct, XMLStructItem } from '../defines';
-import { globalMatterTypes } from '../matterTypes';
+import { globalMatterTypes, isTypeNumeric } from '../matterTypes';
 
 type StructType = XMLStruct['$'];
 type StructItemType = XMLStructItem['$'];
@@ -104,7 +104,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
 
     const handleItemTooltip = (field: string) => {
         const tooltips: { [key: string]: string } = {
-            name: 'The name of the item. It shall be unique within the enum.',
+            name: 'The name of the item. It shall be unique within the structure.',
             fieldId:
                 'The numeric identifier of the item. It shall be unique within the structure.',
             type: 'The data type of the item. The valid values are listed in the src/app/zap-templates/zcl/data-model/chip/chip-types.xml file, relative to the Matter project root directory.',
@@ -112,11 +112,12 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
             minLength:
                 "The minimum allowed length of the item in bytes. This value applies only to the 'array' data type.",
             min: "The minimum allowed value of the item. This value applies only to the numeric data types. The minimum value shall be smaller than 'max' value and fit in the numeric type bounds.",
-            max: "The minimum allowed value of the item. This value applies only to the numeric data types. The maximum value shall be greater than 'min' value and fit in the numeric type bounds.",
+            max: "The maximum allowed value of the item. This value applies only to the numeric data types. The maximum value shall be greater than 'min' value and fit in the numeric type bounds.",
             isNullable:
                 "The flag indicating if the item can be set to NULL. The valid values are 'true' and 'false'.",
             isFabricSensitive:
                 "The flag indicating if the item is fabric sensitive, which means it can be treated differently depending on the specific fabric. The valid values are 'true' and 'false'.",
+            array: "The flag indicating if the item is an array. If it is set to 'true', the type field represents the type of the array elements.",
         };
         return tooltips[field] || '';
     };
@@ -151,6 +152,25 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
         return true;
     };
 
+    const handleFieldDisabled = (field: string, items: StructItemType) => {
+        if (field === 'length' || field === 'minLength') {
+            if (items.array === true || String(items.array) === 'true') {
+                return false;
+            }
+            return true;
+        }
+        if (field === 'min' || field === 'max') {
+            if (
+                Object.keys(items).includes('type') &&
+                isTypeNumeric(items.type)
+            ) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    };
+
     return (
         <EditBox<StructType>
             value={localStruct.$}
@@ -175,6 +195,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
                     onTooltipDisplay={handleItemTooltip}
                     isOptional={handleOptionalItem}
                     defaultPrototype={defaultXMLStructItem.$}
+                    isDisabled={handleFieldDisabled}
                     treatAsHex={(field: keyof StructItemType) =>
                         field === 'fieldId'
                     }

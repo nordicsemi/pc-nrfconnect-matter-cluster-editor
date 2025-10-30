@@ -179,3 +179,30 @@ export const matterDomains = [
 export const matterDeviceTypeClasses = ['Utility', 'Simple', 'Dynamic'];
 
 export const matterDeviceTypeScopes = ['Node', 'Endpoint'];
+
+export const isTypeNumeric = (type: string) =>
+    type === 'int8u' ||
+    type === 'int16u' ||
+    type === 'int24u' ||
+    type === 'int32u' ||
+    type === 'int40u' ||
+    type === 'int48u' ||
+    type === 'int56u' ||
+    type === 'int64u' ||
+    type === 'int8s' ||
+    type === 'int16s' ||
+    type === 'int24s' ||
+    type === 'int32s' ||
+    type === 'int40s' ||
+    type === 'int48s' ||
+    type === 'int56s' ||
+    type === 'int64s' ||
+    type === 'single' ||
+    type === 'double';
+
+export const isTypeArray = (type: string) =>
+    type === 'octet_string' ||
+    type === 'utf8_string' ||
+    type === 'long_char_string' ||
+    type === 'char_string' ||
+    type === 'long_octet_string';
