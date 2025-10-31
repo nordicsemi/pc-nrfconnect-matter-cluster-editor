@@ -71,6 +71,9 @@ export const defaultXMLCommandArgument: XMLCommandArgument = {
         isNullable: false,
         optional: false,
         array: false,
+        length: 0,
+        min: 0,
+        max: 0,
     },
 };
 
@@ -80,6 +83,9 @@ export const defaultXMLEventField: XMLEventField = {
         name: '',
         type: '',
         array: false,
+        length: 0,
+        min: 0,
+        max: 0,
     },
 };
 
@@ -144,6 +150,7 @@ export const defaultXMLEnum: XMLEnum = {
         name: '',
         type: '',
         array: false,
+        length: 0,
     },
     cluster: [],
     item: [],

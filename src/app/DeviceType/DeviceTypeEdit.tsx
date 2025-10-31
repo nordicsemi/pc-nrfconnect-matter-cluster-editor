@@ -107,6 +107,19 @@ const DeviceTypeEdit: React.FC<EditRowWrapper<XMLDeviceClusterInclude>> = ({
         }));
     };
 
+    const handleIsValid = (
+        field: string,
+        items: XMLDeviceClusterIncludeType
+    ) => {
+        const invalidMessages: string[] = [];
+        if (items.client === false && items.server === false) {
+            invalidMessages.push(
+                'At least one of client or server must be true.'
+            );
+        }
+        return { isValid: invalidMessages.length === 0, invalidMessages };
+    };
+
     const handleValueChange = useCallback(
         (value: XMLDeviceClusterIncludeType): void => {
             if (JSON.stringify(value) !== JSON.stringify(localClusters.$)) {
@@ -135,6 +148,7 @@ const DeviceTypeEdit: React.FC<EditRowWrapper<XMLDeviceClusterInclude>> = ({
             onTooltipDisplay={handleClusterTooltip}
             isOptional={handleOptional}
             isDisabled={() => false}
+            isValid={handleIsValid}
             open={open}
             displayNote={
                 'You can require attributes, commands and events for the cluster.' +

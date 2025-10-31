@@ -199,3 +199,18 @@ export const isTypeNumeric = (type: string) =>
     type === 'int64s' ||
     type === 'single' ||
     type === 'double';
+
+export const isTypeComposite = (type: string): boolean => {
+    const matterType = getMatterTypeByName(type);
+    return matterType?.composite ?? false;
+};
+
+export const getTypeSize = (type: string): number | undefined => {
+    const matterType = getMatterTypeByName(type);
+    return matterType?.size;
+};
+
+export const isTypeCustom = (type: string): boolean => {
+    const matterType = getMatterTypeByName(type);
+    return matterType === undefined;
+};

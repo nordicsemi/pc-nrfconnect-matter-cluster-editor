@@ -171,7 +171,7 @@ const EditBox = <T,>({
     const [localValue, setLocalValue] = useState<T>(value);
     const [mandatoryCheckWarningOpen, mandatoryCheckWarningOpenSet] =
         React.useState(false);
-    const [validationWarningOpen, validationWarningOpenSet] =
+    const [validationWarningOpen, setValidationWarningOpen] =
         React.useState(false);
     const [invalidMessages, setInvalidMessages] = React.useState<string[]>([]);
     const [showInnerElementEdit, showInnerElementEditSet] =
@@ -456,7 +456,7 @@ const EditBox = <T,>({
                                 return;
                             }
                             if (!allChecksPassed()) {
-                                validationWarningOpenSet(true);
+                                setValidationWarningOpen(true);
                                 return;
                             }
                             onSave(localValue);
@@ -479,7 +479,7 @@ const EditBox = <T,>({
             </ErrorDialog>
             <ErrorDialog
                 isVisible={validationWarningOpen}
-                onHide={() => validationWarningOpenSet(false)}
+                onHide={() => setValidationWarningOpen(false)}
                 title="Not all fields are valid"
             >
                 <div className="tw-flex tw-flex-col tw-gap-8 tw-text-sm tw-font-medium">

@@ -7,6 +7,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box, TextField, Tooltip } from '@mui/material';
 
+import { disableLength, disableMinMax } from '../../common/Disabling';
+import { validateLength, validateMax } from '../../common/Validation';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
@@ -24,7 +26,10 @@ import {
 import {
     accessOptions,
     clientServerOptions,
+    getTypeSize,
     globalMatterTypes,
+    isTypeComposite,
+    isTypeCustom,
     roleOptions,
 } from '../matterTypes';
 
@@ -136,10 +141,53 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
         return tooltips[field] || '';
     };
 
+    const handleArgumentIsValid = (
+        field: string,
+        items: ArgumentCommandType
+    ) => {
+        const invalidMessages: string[] = [];
+        let result = validateLength(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
+        }
+        result = validateMax(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
+        }
+        return { isValid: invalidMessages.length === 0, invalidMessages };
+    };
+
+    const handleArgumentDisabled = (
+        field: string,
+        items: ArgumentCommandType
+    ) => {
+        // Enable all fields for custom types
+        if (
+            Object.keys(items).includes('type') &&
+            items.type &&
+            isTypeCustom(items.type)
+        ) {
+            return false;
+        }
+
+        return disableLength(items, field) || disableMinMax(items, field);
+    };
+
     const handleAutomateActions = useCallback(
         (field: keyof ArgumentCommandType, value: ArgumentCommandType) => {
-            if (field === 'type' && value.type && value.type === 'array') {
-                return { array: true };
+            if (field === 'type' && value.type) {
+                // Auto-set array flag for array type
+                if (value.type === 'array') {
+                    return { array: true };
+                }
+                if (isTypeComposite(value.type)) {
+                    const size = getTypeSize(value.type);
+                    if (size !== undefined) {
+                        return { length: size };
+                    }
+                    return { length: 0 };
+                }
+                return undefined;
             }
             return undefined;
         },
@@ -209,6 +257,8 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
                     onTooltipDisplay={handleArgumentTooltip}
                     isOptional={handleOptionalArgument}
                     defaultPrototype={defaultXMLCommandArgument.$}
+                    isDisabled={handleArgumentDisabled}
+                    isValid={handleArgumentIsValid}
                     automateActions={handleAutomateActions}
                     typeFields={{
                         type: globalMatterTypes,

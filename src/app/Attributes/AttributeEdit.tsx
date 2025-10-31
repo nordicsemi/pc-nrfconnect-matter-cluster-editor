@@ -6,6 +6,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { disableLength, disableMinMax } from '../../common/Disabling';
+import { validateLength, validateMax } from '../../common/Validation';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
@@ -15,8 +17,10 @@ import {
     accessOptions,
     apiMaturityOptions,
     clientServerOptions,
+    getTypeSize,
     globalMatterTypes,
-    isTypeNumeric,
+    isTypeComposite,
+    isTypeCustom,
     roleOptions,
 } from '../matterTypes';
 
@@ -104,7 +108,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
             code: 'The code of the attribute. It shall be unique within the cluster. The code is 32-bit combination of the manufacturer code and attribute ID. The most significant 16 bits are the manufacturer code (range test codes is 0xFFF1 - 0xFFF4). The least significant 16 bits are the attribute ID within 0x0000 - 0x4FFF range.',
             define: 'The C-language define representing the attribute in the C-code. It shall be written using only capital letters and underscores, for example YOUR_ATTRIBUTE_NAME.',
             type: 'The data type of the attribute. Select from predefined Matter types or enter your own custom type.',
-            length: "The length of the attribute in bytes. This value applies only to the 'array' data type.",
+            length: "The length of the attribute in bytes. This value applies to 'array' data types and composite types.",
             min: "The minimum allowed value of the attribute. This value applies only to the numeric data types. The minimum value shall be smaller than 'max' value and fit in the numeric type bounds.",
             max: "The maximum allowed value of the attribute. This value applies only to the numeric data types. The maximum value shall be greater than 'min' value and fit in the numeric type bounds.",
             writable:
@@ -141,67 +145,45 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
 
     const handleIsValid = (field: string, items: AttributeValuesType) => {
         const invalidMessages: string[] = [];
-        if (
-            field === 'length' &&
-            Object.keys(items).includes('array') &&
-            (items.array === true || String(items.array) === 'true')
-        ) {
-            if (
-                items.length === undefined ||
-                items.length === null ||
-                items.length <= 0
-            ) {
-                invalidMessages.push(
-                    'The length of the attribute is required for array type.'
-                );
-            }
+        let result = validateLength(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
         }
-        if (field === 'max') {
-            if (
-                Object.keys(items).includes('type') &&
-                isTypeNumeric(items.type) &&
-                (items.max === undefined ||
-                    items.max === null ||
-                    items.max <= (items.min || 0))
-            ) {
-                invalidMessages.push(
-                    'The maximum value must be greater than the minimum value for numeric types.'
-                );
-            }
+        result = validateMax(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
         }
-        return {
-            isValid: invalidMessages.length === 0,
-            invalidMessages,
-        };
+        return { isValid: invalidMessages.length === 0, invalidMessages };
     };
 
     const handleDisabled = (field: string, items: AttributeValuesType) => {
-        if (field === 'length') {
-            if (
-                items.array === true ||
-                String(items.array) === 'true' ||
-                items.type === 'array'
-            ) {
-                return false;
-            }
-            return true;
+        // Enable all fields for custom types
+        if (
+            Object.keys(items).includes('type') &&
+            items.type &&
+            isTypeCustom(items.type)
+        ) {
+            return false;
         }
-        if (field === 'min' || field === 'max') {
-            if (
-                Object.keys(items).includes('type') &&
-                isTypeNumeric(items.type)
-            ) {
-                return false;
-            }
-            return true;
-        }
-        return false;
+
+        return disableLength(items, field) || disableMinMax(items, field);
     };
 
     const handleAutomateActions = useCallback(
         (field: keyof AttributeValuesType, value: AttributeValuesType) => {
-            if (field === 'type' && value.type && value.type === 'array') {
-                return { array: true };
+            if (field === 'type' && value.type) {
+                // Auto-set array flag for array type
+                if (value.type === 'array') {
+                    return { array: true };
+                }
+                if (isTypeComposite(value.type)) {
+                    const size = getTypeSize(value.type);
+                    if (size !== undefined) {
+                        return { length: size };
+                    }
+                    return { length: 0 };
+                }
+                return undefined;
             }
             return undefined;
         },

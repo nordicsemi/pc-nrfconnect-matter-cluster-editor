@@ -99,9 +99,7 @@ class ClusterFile {
      * The base instance of the cluster file.
      * This instance is used to compare the changes with the original file to generate the cluster extension.
      */
-    static XMLBaseInstance: XMLConfigurator = deepClone(
-        defaultXMLConfigurator
-    );
+    static XMLBaseInstance: XMLConfigurator = deepClone(defaultXMLConfigurator);
 
     static XMLDefaultInstance: XMLConfigurator = deepClone(
         defaultXMLConfigurator

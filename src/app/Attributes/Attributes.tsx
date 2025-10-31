@@ -10,7 +10,7 @@ import ClusterFile from '../Components/ClusterFile';
 import Component from '../Components/Component';
 import { defaultXMLAttribute } from '../defaults';
 import { XMLAttribute } from '../defines';
-import { isTypeNumeric } from '../matterTypes';
+import { isTypeComposite, isTypeCustom, isTypeNumeric } from '../matterTypes';
 import AttributeDetails from './AttributeDetails';
 import AttributeEdit from './AttributeEdit';
 
@@ -104,6 +104,14 @@ const AttributesTable: React.FC<{ active: boolean }> = () => {
         attribute.$.writable = attribute.$.writable || undefined;
         attribute.$.apiMaturity = attribute.$.apiMaturity || undefined;
 
+        // If the type is custom, we do not need to clear the length value
+        if (isTypeCustom(attribute.$.type)) {
+            if (attribute.$.length === 0) attribute.$.length = undefined;
+            if (attribute.$.min === 0) attribute.$.min = undefined;
+            if (attribute.$.max === 0) attribute.$.max = undefined;
+            return;
+        }
+
         // For non-numeric types we cannot have min and max values
         if (!isTypeNumeric(attribute.$.type)) {
             attribute.$.min = undefined;
@@ -111,7 +119,7 @@ const AttributesTable: React.FC<{ active: boolean }> = () => {
         }
 
         // For non-array types we cannot have a length value
-        if (!attribute.$.array) {
+        if (!attribute.$.array && !isTypeComposite(attribute.$.type)) {
             attribute.$.length = undefined;
         }
     };

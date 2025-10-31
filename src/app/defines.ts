@@ -148,7 +148,7 @@ export interface XMLClusterCode {
 }
 
 export interface XMLEnum {
-    $: { name: string; type: string; array?: boolean };
+    $: { name: string; type: string; array?: boolean; length?: number };
     cluster: XMLClusterCode[];
     item?: XMLEnumItem[];
 }
@@ -246,6 +246,9 @@ export interface XMLCommandArgument {
         isNullable?: boolean;
         optional?: boolean;
         array?: boolean;
+        length?: number;
+        min?: number;
+        max?: number;
     };
 }
 
@@ -266,7 +269,15 @@ export interface XMLEvent {
 }
 
 export interface XMLEventField {
-    $: { id: HexString; name: string; type: string; array?: boolean };
+    $: {
+        id: HexString;
+        name: string;
+        type: string;
+        array?: boolean;
+        length?: number;
+        min?: number;
+        max?: number;
+    };
 }
 
 // Types

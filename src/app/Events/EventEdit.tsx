@@ -7,6 +7,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 
+import { disableLength, disableMinMax } from '../../common/Disabling';
+import { validateLength, validateMax } from '../../common/Validation';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import TextInputField from '../Components/Edit/TextInputField';
@@ -15,7 +17,9 @@ import { defaultXMLEvent, defaultXMLEventField } from '../defaults';
 import { HexString, XMLEvent, XMLEventField } from '../defines';
 import {
     clientServerOptions,
+    getTypeSize,
     globalMatterTypes,
+    isTypeCustom,
     priorityOptions,
 } from '../matterTypes';
 
@@ -131,6 +135,53 @@ const EventEdit: React.FC<EditRowWrapper<XMLEvent>> = ({
         return true;
     };
 
+    const handleFieldIsValid = (field: string, items: ArgumentEventType) => {
+        const invalidMessages: string[] = [];
+        let result = validateLength(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
+        }
+        result = validateMax(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
+        }
+        return {
+            isValid: invalidMessages.length === 0,
+            invalidMessages,
+        };
+    };
+
+    const handleFieldDisabled = (field: string, items: ArgumentEventType) => {
+        // Enable all fields for custom types
+        if (
+            Object.keys(items).includes('type') &&
+            items.type &&
+            isTypeCustom(items.type)
+        ) {
+            return false;
+        }
+
+        return disableLength(items, field) || disableMinMax(items, field);
+    };
+
+    const handleAutomateActions = useCallback(
+        (field: keyof ArgumentEventType, value: ArgumentEventType) => {
+            if (field === 'type' && value.type) {
+                // Auto-set array flag for array type
+                if (value.type === 'array') {
+                    return { array: true };
+                }
+                const size = getTypeSize(value.type);
+                if (size !== undefined) {
+                    return { length: size };
+                }
+                return { length: 0 };
+            }
+            return undefined;
+        },
+        []
+    );
+
     return (
         <EditBox<EventValuesType>
             value={localEvent.$}
@@ -174,6 +225,9 @@ const EventEdit: React.FC<EditRowWrapper<XMLEvent>> = ({
                     onTooltipDisplay={handleFieldsTooltip}
                     isOptional={() => false}
                     defaultPrototype={defaultXMLEventField.$}
+                    isDisabled={handleFieldDisabled}
+                    isValid={handleFieldIsValid}
+                    automateActions={handleAutomateActions}
                     typeFields={{
                         type: globalMatterTypes,
                     }}

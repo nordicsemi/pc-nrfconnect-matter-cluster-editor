@@ -10,7 +10,7 @@ import ClusterFile from '../Components/ClusterFile';
 import Component from '../Components/Component';
 import { defaultXMLStruct } from '../defaults';
 import { XMLStruct } from '../defines';
-import { isTypeNumeric } from '../matterTypes';
+import { isTypeComposite, isTypeNumeric } from '../matterTypes';
 import StructDetails from './StructDetail';
 import StructEdit from './StructEdit';
 
@@ -92,7 +92,7 @@ const StructTable: React.FC<{ active: boolean }> = () => {
                 }
 
                 // For non-array types we cannot have length or minLength values
-                if (!item.$.array) {
+                if (!item.$.array && !isTypeComposite(item.$.type)) {
                     item.$.length = undefined;
                     item.$.minLength = undefined;
                 }

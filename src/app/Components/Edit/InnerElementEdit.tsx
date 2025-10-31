@@ -26,6 +26,7 @@ import {
     InfoDialog,
 } from '@nordicsemiconductor/pc-nrfconnect-shared';
 
+import { ListItemError } from '../../../common/List';
 import { HexString } from '../../defines';
 import { camelCaseToTitle } from '../Utils';
 import BooleanField from './BooleanField';
@@ -121,15 +122,10 @@ export interface InnerElementEditProps<T> {
      * @param {T} value - The value of the field
      * @returns {boolean} Whether the field is valid
      */
-    isValid?: (field: keyof T, value: T) => boolean;
-    /**
-     * A callback function to get the invalid messages for a given field.
-     *
-     * @callback getInvalidMessages
-     * @param {keyof T} field - The field that is being checked if it is valid
-     * @returns {string} The invalid messages for the field
-     */
-    getInvalidMessages?: (field: keyof T) => string;
+    isValid?: (
+        field: keyof T,
+        value: T
+    ) => { isValid: boolean; invalidMessages: string[] };
     /**
      * A callback function to automate actions for a given field.
      *
@@ -231,8 +227,7 @@ const InnerElementEdit = <T,>({
     onTooltipDisplay,
     isOptional,
     isDisabled,
-    isValid,
-    getInvalidMessages,
+    isValid = () => ({ isValid: true, invalidMessages: [] }),
     defaultPrototype,
     dropdownFields,
     typeFields,
@@ -241,6 +236,7 @@ const InnerElementEdit = <T,>({
     automateActions,
 }: InnerElementEditProps<T>) => {
     const [internalList, setInternalList] = useState<T[]>(elements);
+    const [invalidMessages, setInvalidMessages] = useState<string[]>([]);
     const [showInnerElementEdit, setShowInnerElementEdit] =
         useState<boolean>(false);
     const [mandatoryCheckWarningOpen, setMandatoryCheckWarningOpen] =
@@ -301,12 +297,26 @@ const InnerElementEdit = <T,>({
         [internalList, automateActions, treatAsHex]
     );
 
-    const allChecksPassed = () =>
-        internalList.every(element =>
-            Object.entries(element as object).every(
-                ([key]) => isValid?.(key as keyof T, element) ?? true
-            )
-        );
+    const allChecksPassed = () => {
+        const messages: string[] = [];
+        internalList.forEach((element, elementIndex) => {
+            Object.keys(element as object).forEach(key => {
+                const result = isValid(key as keyof T, element);
+                if (!result.isValid) {
+                    // Create prefix: (number of element) name of element: message
+                    const elementName = (element as any).name ?? '';
+                    const prefix = `(${elementIndex + 1})${
+                        elementName ? ` ${elementName}` : ''
+                    }: `;
+                    messages.push(
+                        ...result.invalidMessages.map(msg => `${prefix}${msg}`)
+                    );
+                }
+            });
+        });
+        setInvalidMessages(messages);
+        return messages.length === 0;
+    };
 
     const getAllFieldKeys = (elem: T): (keyof T)[] => {
         const elemKeys = Object.keys(elem as object) as (keyof T)[];
@@ -549,26 +559,27 @@ const InnerElementEdit = <T,>({
                         onHide={() => setValidationWarningOpen(false)}
                         title="Not all fields are valid"
                     >
-                        You have not filled in all fields correctly. Please fix
-                        the following validation errors before saving:
-                        <ul>
-                            {internalList.flatMap((element, elementIndex) =>
-                                Object.keys(element as object)
-                                    .filter(
-                                        key =>
-                                            !isValid?.(key as keyof T, element)
-                                    )
-                                    .map(key => (
-                                        <li key={`${elementIndex}-${key}`}>
-                                            Element {elementIndex + 1} -{' '}
-                                            {camelCaseToTitle(String(key))}:{' '}
-                                            {getInvalidMessages?.(
-                                                key as keyof T
-                                            ) || 'Invalid value'}
-                                        </li>
-                                    ))
-                            )}
-                        </ul>
+                        <div className="tw-flex tw-flex-col tw-gap-8 tw-text-sm tw-font-medium">
+                            <div>
+                                You have not filled in all fields correctly.
+                                Please fix the following validation errors
+                                before saving:
+                            </div>
+                            <div
+                                className={`tw-flex tw-flex-col tw-gap-2 ${
+                                    invalidMessages.length > 4
+                                        ? 'scrollbar tw-max-h-64 tw-overflow-y-auto'
+                                        : ''
+                                }`}
+                            >
+                                {invalidMessages.map(message => (
+                                    <ListItemError
+                                        key={message}
+                                        item={message}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     </InfoDialog>
                 </DialogActions>
             </Dialog>

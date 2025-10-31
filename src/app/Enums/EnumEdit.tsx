@@ -16,7 +16,12 @@ import {
     defaultXMLEnumItem,
 } from '../defaults';
 import { XMLClusterCode, XMLEnum, XMLEnumItem } from '../defines';
-import { loadMatterTypes } from '../matterTypes';
+import {
+    getTypeSize,
+    isTypeComposite,
+    isTypeCustom,
+    loadMatterTypes,
+} from '../matterTypes';
 
 type EnumType = XMLEnum['$'];
 type EnumItemType = XMLEnumItem['$'];
@@ -140,10 +145,74 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
         return false;
     };
 
+    const handleFieldIsValid = (field: string, items: EnumType) => {
+        const invalidMessages: string[] = [];
+        if (field === 'length') {
+            // Check for array type
+            if (
+                (Object.keys(items).includes('array') &&
+                    (items.array === true || String(items.array) === 'true')) ||
+                (Object.keys(items).includes('type') &&
+                    items.type &&
+                    isTypeComposite(items.type))
+            ) {
+                if (
+                    items.length === undefined ||
+                    items.length === null ||
+                    items.length <= 0
+                ) {
+                    invalidMessages.push('The length of the enum is required.');
+                }
+            }
+        }
+        return {
+            isValid: invalidMessages.length === 0,
+            invalidMessages,
+        };
+    };
+
+    const handleFieldDisabled = (field: string, items: EnumType) => {
+        // Enable all fields for custom types
+        if (
+            Object.keys(items).includes('type') &&
+            items.type &&
+            isTypeCustom(items.type)
+        ) {
+            return false;
+        }
+
+        if (field === 'length') {
+            if (items.array === true || String(items.array) === 'true') {
+                return false;
+            }
+            // Enable length field for composite types
+            if (
+                Object.keys(items).includes('type') &&
+                items.type &&
+                isTypeComposite(items.type)
+            ) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    };
+
     const handleAutomateActions = useCallback(
         (field: keyof EnumType, value: EnumType) => {
-            if (field === 'type' && value.type && value.type === 'array') {
-                return { array: true };
+            if (field === 'type' && value.type) {
+                // Auto-set array flag for array type
+                if (value.type === 'array') {
+                    return { array: true };
+                }
+                if (isTypeComposite(value.type)) {
+                    const size = getTypeSize(value.type);
+                    if (size !== undefined) {
+                        return { length: size };
+                    }
+                    return { length: 0 };
+                }
+                return undefined;
             }
             return undefined;
         },
@@ -159,7 +228,8 @@ const EnumEdit: React.FC<EditRowWrapper<XMLEnum>> = ({
             }}
             onTooltipDisplay={field => handleFieldTooltip(field)}
             isOptional={handleOptionalField}
-            isDisabled={() => false}
+            isDisabled={handleFieldDisabled}
+            isValid={handleFieldIsValid}
             onCancel={onCancel}
             automateActions={handleAutomateActions}
             typeFields={{

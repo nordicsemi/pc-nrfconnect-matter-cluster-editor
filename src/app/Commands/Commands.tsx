@@ -10,6 +10,7 @@ import ClusterFile from '../Components/ClusterFile';
 import Component from '../Components/Component';
 import { defaultXMLCommand } from '../defaults';
 import { XMLCommand } from '../defines';
+import { isTypeComposite, isTypeCustom } from '../matterTypes';
 import CommandDetails from './CommandDetails';
 import CommandEdit from './CommandEdit';
 
@@ -88,6 +89,24 @@ const CommandsTable: React.FC<{ active: boolean }> = () => {
         command.$.optional = command.$.optional || undefined;
         command.$.disableDefaultResponse =
             command.$.disableDefaultResponse || undefined;
+
+        // Clear boolean fields for each argument
+        if (command.arg) {
+            command.arg.forEach(argument => {
+                argument.$.isNullable = argument.$.isNullable || undefined;
+                argument.$.optional = argument.$.optional || undefined;
+                argument.$.array = argument.$.array || undefined;
+
+                if (isTypeCustom(argument.$.type)) {
+                    if (argument.$.length === 0) argument.$.length = undefined;
+                    return;
+                }
+
+                if (!argument.$.array && !isTypeComposite(argument.$.type)) {
+                    argument.$.length = undefined;
+                }
+            });
+        }
     };
 
     const saveAllCommandRows = (commands: XMLCommand[]) => {

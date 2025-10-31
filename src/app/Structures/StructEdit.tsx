@@ -7,6 +7,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 
+import { disableLength, disableMinMax } from '../../common/Disabling';
+import { validateLength, validateMax } from '../../common/Validation';
 import EditBox from '../Components/Edit/EditBox';
 import InnerElementEdit from '../Components/Edit/InnerElementEdit';
 import { EditRowWrapper } from '../Components/TableRow';
@@ -16,7 +18,7 @@ import {
     defaultXMLStructItem,
 } from '../defaults';
 import { XMLClusterCode, XMLStruct, XMLStructItem } from '../defines';
-import { globalMatterTypes, isTypeNumeric } from '../matterTypes';
+import { getTypeSize, globalMatterTypes, isTypeCustom } from '../matterTypes';
 
 type StructType = XMLStruct['$'];
 type StructItemType = XMLStructItem['$'];
@@ -112,7 +114,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
             fieldId:
                 'The numeric identifier of the item. It shall be unique within the structure.',
             type: 'The data type of the item. The valid values are listed in the src/app/zap-templates/zcl/data-model/chip/chip-types.xml file, relative to the Matter project root directory.',
-            length: "The length of the item in bytes. This value applies only to the 'array' data type. It shall be greater than the 'minLength' value.",
+            length: "The length of the item in bytes. This value applies to 'array' data types and composite types. It shall be greater than the 'minLength' value.",
             minLength:
                 "The minimum allowed length of the item in bytes. This value applies only to the 'array' data type.",
             min: "The minimum allowed value of the item. This value applies only to the numeric data types. The minimum value shall be smaller than 'max' value and fit in the numeric type bounds.",
@@ -156,35 +158,52 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
         return true;
     };
 
+    const handleItemIsValid = (field: string, items: StructItemType) => {
+        const invalidMessages: string[] = [];
+        let result = validateLength(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
+        }
+        result = validateMax(items, field);
+        if (!result.isValid) {
+            invalidMessages.push(result.invalidMessage);
+        }
+        return {
+            isValid: invalidMessages.length === 0,
+            invalidMessages,
+        };
+    };
+
     const handleFieldDisabled = (field: string, items: StructItemType) => {
-        if (field === 'length' || field === 'minLength') {
-            if (items.array === true || String(items.array) === 'true') {
-                return false;
-            }
-            return true;
+        // Enable all fields for custom types
+        if (
+            Object.keys(items).includes('type') &&
+            items.type &&
+            isTypeCustom(items.type)
+        ) {
+            return false;
         }
-        if (field === 'min' || field === 'max') {
-            if (
-                Object.keys(items).includes('type') &&
-                isTypeNumeric(items.type)
-            ) {
-                return false;
-            }
-            return true;
-        }
-        return false;
+
+        return disableLength(items, field) || disableMinMax(items, field);
     };
 
     const handleAutomateActions = useCallback(
         (field: keyof StructItemType, value: StructItemType) => {
-            if (field === 'type' && value.type && value.type === 'array') {
-                return { array: true };
+            if (field === 'type' && value.type) {
+                // Auto-set array flag for array type
+                if (value.type === 'array') {
+                    return { array: true };
+                }
+                const size = getTypeSize(value.type);
+                if (size !== undefined) {
+                    return { length: size };
+                }
+                return { length: 0 };
             }
             return undefined;
         },
         []
     );
-    undefined;
 
     return (
         <EditBox<StructType>
@@ -212,6 +231,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
                     isOptional={handleOptionalItem}
                     defaultPrototype={defaultXMLStructItem.$}
                     isDisabled={handleFieldDisabled}
+                    isValid={handleItemIsValid}
                     automateActions={handleAutomateActions}
                     treatAsHex={(field: keyof StructItemType) =>
                         field === 'fieldId'
