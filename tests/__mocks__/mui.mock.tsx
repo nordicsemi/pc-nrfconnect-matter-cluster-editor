@@ -119,7 +119,7 @@ interface TextFieldProps {
 
 interface TooltipProps {
     children: ReactNode;
-    title: string;
+    title: ReactNode;
     arrow?: boolean;
     placement?: string;
 }
@@ -424,10 +424,10 @@ jest.mock('@mui/material', () => ({
     Tooltip: ({ children, title, arrow, placement }: TooltipProps) => (
         <div
             data-testid="mui-tooltip"
-            data-title={title}
             data-arrow={arrow ? 'true' : 'false'}
             data-placement={placement}
         >
+            <div data-testid="mui-tooltip-title">{title}</div>
             {children}
         </div>
     ),

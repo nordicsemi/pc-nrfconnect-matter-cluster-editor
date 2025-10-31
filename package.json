@@ -1,6 +1,6 @@
 {
     "name": "pc-nrfconnect-matter-cluster-editor",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Tool for creating and editing manufacturer-specific clusters and data model extensions in Matter",
     "displayName": "Matter Cluster Editor",
     "author": "Nordic Semiconductor ASA",

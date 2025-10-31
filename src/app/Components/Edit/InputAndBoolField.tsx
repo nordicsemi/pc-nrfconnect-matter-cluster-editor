@@ -19,6 +19,7 @@ interface InputAndBoolFieldProps {
     disabled?: boolean;
     tooltip?: string;
     boolLabel?: string;
+    tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
     /**
      * A callback function to update the string value.
      *
@@ -100,8 +101,23 @@ const InputAndBoolField: React.FC<InputAndBoolFieldProps> = ({
     onChangeString,
     onChangeBool,
     useNrfconnect,
+    tooltipPlacement = 'right',
 }) => (
-    <Tooltip title={tooltip} arrow placement="right">
+    <Tooltip
+        title={
+            <Box
+                sx={{
+                    maxWidth: 220,
+                    whiteSpace: 'pre-line',
+                    wordWrap: 'break-word',
+                }}
+            >
+                {tooltip}
+            </Box>
+        }
+        arrow
+        placement={tooltipPlacement}
+    >
         <Box
             display="flex"
             alignItems="center"
@@ -114,7 +130,6 @@ const InputAndBoolField: React.FC<InputAndBoolFieldProps> = ({
                 value={String(stringValue)}
                 required={required}
                 disabled={disabled}
-                tooltip={tooltip}
                 onChange={onChangeString}
                 fullWidth
                 useNrfconnect={useNrfconnect}

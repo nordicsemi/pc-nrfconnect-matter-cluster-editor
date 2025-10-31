@@ -28,6 +28,7 @@ interface TypeFieldProps {
     required: boolean;
     disabled: boolean;
     tooltip: string;
+    tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
     /**
      * A callback function to update the value.
      *
@@ -69,11 +70,26 @@ const TypeField: React.FC<TypeFieldProps> = ({
     tooltip,
     onChange,
     useNrfconnect,
+    tooltipPlacement = 'right',
 }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     return (
-        <Tooltip title={tooltip} arrow placement="right">
+        <Tooltip
+            title={
+                <Box
+                    sx={{
+                        maxWidth: 220,
+                        whiteSpace: 'pre-line',
+                        wordWrap: 'break-word',
+                    }}
+                >
+                    {tooltip}
+                </Box>
+            }
+            arrow
+            placement={tooltipPlacement}
+        >
             <FormControl fullWidth size="small" className="largeDropdown">
                 {useNrfconnect ? (
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>

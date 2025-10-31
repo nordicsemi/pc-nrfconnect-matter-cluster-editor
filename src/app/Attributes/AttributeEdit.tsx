@@ -121,7 +121,7 @@ const AttributeEdit: React.FC<EditRowWrapper<XMLAttribute>> = ({
                 "The API maturity level of the attribute. The valid values are 'provisional', 'internal', 'stable', and 'deprecated'. This field is optional and items without it are considered to be stable.",
             description:
                 'The attribute description that explains the purpose of the attribute and its use cases.',
-            array: "The flag indicating if the attribute is an array. The valid values are 'true' and 'false'. If the attribute is an array, the storage type is fixed to 'External. It means that the Attribute will not be generated automatically, and you will need to provide a custom implementation of the attribute.",
+            array: "The flag indicating if the attribute is an array. The valid values are 'true' and 'false'. If the attribute is an array, the storage type is fixed to 'External'. It means that the Attribute will not be generated automatically, and you will need to provide a custom implementation of the attribute.",
         };
         return tooltips[field] || '';
     };

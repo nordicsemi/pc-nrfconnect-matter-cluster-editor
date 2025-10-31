@@ -24,6 +24,7 @@ interface DropdownFieldProps {
     required: boolean;
     disabled: boolean;
     tooltip: string;
+    tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
     /**
      * A callback function to update the value.
      *
@@ -75,8 +76,23 @@ const DropdownField: React.FC<DropdownFieldProps> = ({
     tooltip,
     onChange,
     useNrfconnect,
+    tooltipPlacement = 'right',
 }) => (
-    <Tooltip title={tooltip} arrow placement="right">
+    <Tooltip
+        title={
+            <Box
+                sx={{
+                    maxWidth: 220,
+                    whiteSpace: 'pre-line',
+                    wordWrap: 'break-word',
+                }}
+            >
+                {tooltip}
+            </Box>
+        }
+        arrow
+        placement={tooltipPlacement}
+    >
         <FormControl fullWidth size="small" className="largeDropdown">
             {useNrfconnect ? (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>

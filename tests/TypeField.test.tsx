@@ -9,7 +9,13 @@ import './__mocks__/nordic-shared.mock';
 import '@testing-library/jest-dom';
 
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    within,
+} from '@testing-library/react';
 
 // Import the component
 import TypeField from '../src/app/Components/Edit/TypeField';
@@ -47,7 +53,21 @@ describe('TypeField component', () => {
 
         const tooltip = screen.getByTestId('mui-tooltip');
         expect(tooltip).toBeInTheDocument();
-        expect(tooltip.getAttribute('data-title')).toBe('Test tooltip');
+
+        const tooltipTitle = screen.getByTestId('mui-tooltip-title');
+        expect(tooltipTitle).toBeInTheDocument();
+
+        const tooltipBox = within(tooltipTitle).getByTestId('mui-box');
+        expect(tooltipBox).toBeInTheDocument();
+        expect(tooltipBox).toHaveAttribute(
+            'data-sx',
+            JSON.stringify({
+                maxWidth: 220,
+                whiteSpace: 'pre-line',
+                wordWrap: 'break-word',
+            })
+        );
+        expect(tooltipBox.textContent).toBe('Test tooltip');
 
         const fieldLabel = screen.getByTestId('mui-typography');
         expect(fieldLabel).toBeInTheDocument();
@@ -109,7 +129,21 @@ describe('TypeField component', () => {
 
         const tooltip = screen.getByTestId('mui-tooltip');
         expect(tooltip).toBeInTheDocument();
-        expect(tooltip.getAttribute('data-title')).toBe('Test tooltip');
+
+        const tooltipTitle = screen.getByTestId('mui-tooltip-title');
+        expect(tooltipTitle).toBeInTheDocument();
+
+        const tooltipBox = within(tooltipTitle).getByTestId('mui-box');
+        expect(tooltipBox).toBeInTheDocument();
+        expect(tooltipBox).toHaveAttribute(
+            'data-sx',
+            JSON.stringify({
+                maxWidth: 220,
+                whiteSpace: 'pre-line',
+                wordWrap: 'break-word',
+            })
+        );
+        expect(tooltipBox.textContent).toBe('Test tooltip');
 
         // Check text field
         const textField = screen.getByTestId('mui-text-field');

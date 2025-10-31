@@ -20,6 +20,7 @@ interface InnerButtonProps {
     badgeContent: number;
     color?: 'primary' | 'secondary';
     tooltip?: string;
+    tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 /**
@@ -47,8 +48,9 @@ const InnerButton = ({
     badgeContent,
     color = 'secondary',
     tooltip = '',
+    tooltipPlacement = 'right',
 }: InnerButtonProps) => (
-    <Tooltip title={tooltip}>
+    <Tooltip title={tooltip} arrow placement={tooltipPlacement}>
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
             <Badge badgeContent={badgeContent} color={color}>
                 <Button variant="info" size="xl" onClick={() => onClick()}>

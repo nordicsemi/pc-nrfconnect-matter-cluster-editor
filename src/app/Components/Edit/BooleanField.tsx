@@ -14,6 +14,7 @@ interface BooleanFieldProps {
     required: boolean;
     disabled: boolean;
     tooltip: string;
+    tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
     /**
      * A callback function to update the value.
      *
@@ -81,10 +82,25 @@ const BooleanField: React.FC<BooleanFieldProps> = ({
     required,
     disabled,
     tooltip,
+    tooltipPlacement = 'right',
     onChange,
     leftLabel = false,
 }) => (
-    <Tooltip title={tooltip} arrow placement="right">
+    <Tooltip
+        title={
+            <Box
+                sx={{
+                    maxWidth: 220,
+                    whiteSpace: 'pre-line',
+                    wordWrap: 'break-word',
+                }}
+            >
+                {tooltip}
+            </Box>
+        }
+        arrow
+        placement={tooltipPlacement}
+    >
         <Box
             sx={{
                 display: 'flex',

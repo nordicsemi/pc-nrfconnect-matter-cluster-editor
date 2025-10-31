@@ -183,6 +183,7 @@ const PageCard = <T,>({
                                 ? tooltipCallback(field as keyof T)
                                 : ''
                         }
+                        tooltipPlacement="left"
                         onChange={(v: string) => {
                             const updatedValue = { ...localValue };
                             if (v !== value) {
@@ -230,6 +231,7 @@ const PageCard = <T,>({
                                 ? tooltipCallback(field as keyof T)
                                 : ''
                         }
+                        tooltipPlacement="left"
                         useNrfconnect={useNrfconnect}
                     />
                 </SingleItem>
@@ -272,6 +274,7 @@ const PageCard = <T,>({
                     tooltip={
                         tooltipCallback ? tooltipCallback(field as keyof T) : ''
                     }
+                    tooltipPlacement="left"
                     fullWidth
                     useNrfconnect={useNrfconnect}
                     minSize={10}

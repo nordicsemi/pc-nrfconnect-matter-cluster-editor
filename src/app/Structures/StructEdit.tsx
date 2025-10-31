@@ -121,7 +121,7 @@ const StructEdit: React.FC<EditRowWrapper<XMLStruct>> = ({
                 "The flag indicating if the item can be set to NULL. The valid values are 'true' and 'false'.",
             isFabricSensitive:
                 "The flag indicating if the item is fabric sensitive, which means it can be treated differently depending on the specific fabric. The valid values are 'true' and 'false'.",
-            array: "The flag indicating if the struct item is an array. The valid values are 'true' and 'false'. If the struct item is an array, the storage type is fixed to 'External. It means that the Struct item will not be generated automatically, and you will need to provide a custom implementation of the struct item.",
+            array: "The flag indicating if the struct item is an array. The valid values are 'true' and 'false'. If the struct item is an array, the storage type is fixed to 'External'. It means that the Struct item will not be generated automatically, and you will need to provide a custom implementation of the struct item.",
         };
         return tooltips[field] || '';
     };

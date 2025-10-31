@@ -114,7 +114,7 @@ const CommandEdit: React.FC<EditRowWrapper<XMLCommand>> = ({
                 "The flag indicating if the argument can be null. The valid values are 'true' and 'false'.",
             optional:
                 "The flag indicating if the command is optional or mandatory. The valid values are 'true' and 'false'.",
-            array: "The flag indicating if the command value is an array. The valid values are 'true' and 'false'. If the command value is an array, the storage type is fixed to 'External. It means that the Command value will not be generated automatically, and you will need to provide a custom implementation of the command.",
+            array: "The flag indicating if the command value is an array. The valid values are 'true' and 'false'. If the command value is an array, the storage type is fixed to 'External'. It means that the Command value will not be generated automatically, and you will need to provide a custom implementation of the command.",
         };
         return tooltips[field] || '';
     };

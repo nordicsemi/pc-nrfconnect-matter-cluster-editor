@@ -99,7 +99,10 @@ describe('InnerButton component', () => {
 
         const tooltip = screen.getByTestId('mui-tooltip');
         expect(tooltip).toBeInTheDocument();
-        expect(tooltip).toHaveAttribute('data-title', testTooltip);
+
+        const tooltipTitle = screen.getByTestId('mui-tooltip-title');
+        expect(tooltipTitle).toBeInTheDocument();
+        expect(tooltipTitle.textContent).toBe(testTooltip);
     });
 
     it('renders with zero badge content', () => {

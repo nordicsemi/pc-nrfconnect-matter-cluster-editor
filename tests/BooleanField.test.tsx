@@ -11,7 +11,7 @@ import './__mocks__/nordic-shared.mock';
 import '@testing-library/jest-dom';
 
 import React from 'react';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 
 // Import the component
 import BooleanField from '../src/app/Components/Edit/BooleanField';
@@ -103,7 +103,21 @@ describe('BooleanField component', () => {
 
         const tooltip = screen.getByTestId('mui-tooltip');
         expect(tooltip).toBeInTheDocument();
-        expect(tooltip).toHaveAttribute('data-title', 'Test tooltip');
+
+        const tooltipTitle = screen.getByTestId('mui-tooltip-title');
+        expect(tooltipTitle).toBeInTheDocument();
+
+        const tooltipBox = within(tooltipTitle).getByTestId('mui-box');
+        expect(tooltipBox).toBeInTheDocument();
+        expect(tooltipBox).toHaveAttribute(
+            'data-sx',
+            JSON.stringify({
+                maxWidth: 220,
+                whiteSpace: 'pre-line',
+                wordWrap: 'break-word',
+            })
+        );
+        expect(tooltipBox.textContent).toBe('Test tooltip');
 
         const toggle = screen.getByTestId('nrf-toggle');
         expect(toggle).toBeInTheDocument();

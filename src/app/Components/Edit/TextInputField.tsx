@@ -16,6 +16,7 @@ interface TextInputFieldProps {
     required?: boolean;
     disabled?: boolean;
     tooltip?: string;
+    tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
     /**
      * A callback function to update the value.
      *
@@ -108,6 +109,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
     required = false,
     disabled = false,
     tooltip = '',
+    tooltipPlacement = 'right',
     onChange,
     fullWidth = false,
     useNrfconnect = false,
@@ -140,7 +142,23 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
     // Render NRF Connect InlineInput
     if (useNrfconnect) {
         return (
-            <Tooltip title={tooltip} arrow placement="right">
+            <Tooltip
+                title={
+                    tooltip ? (
+                        <Box
+                            sx={{
+                                maxWidth: 220,
+                                whiteSpace: 'pre-line',
+                                wordWrap: 'break-word',
+                            }}
+                        >
+                            {tooltip}
+                        </Box>
+                    ) : null
+                }
+                arrow
+                placement={tooltipPlacement}
+            >
                 <Box
                     sx={{
                         display: 'flex',
@@ -169,7 +187,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
 
     // Render standard MUI TextField
     return (
-        <Tooltip title={tooltip} arrow placement="right">
+        <Tooltip title={tooltip} arrow placement={tooltipPlacement}>
             <TextField
                 required={required}
                 label={field}
