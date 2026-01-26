@@ -1,10 +1,10 @@
 # Overview and user interface
 
-The {{app_name}} main window displays the basic information about the Matter cluster. The user interface broadly follows the organization of other nRF Connect for Desktop apps.
+The Matter Cluster Editor app main window displays the basic information about the Matter cluster. The user interface broadly follows the organization of other nRF Connect for Desktop apps.
 
-When you start the {{app_name}}, the application main window appears with the **Cluster** tab selected by default and its main panel empty.
+When you start the Matter Cluster Editor app, the application main window appears with the **Cluster** tab selected by default and its main panel empty.
 
-![{{app_name}} default view at startup](./screenshots/matter_cluster_tool_standard_view.png "{{app_name}} default view at startup")
+![Matter Cluster Editor app default view at startup](./screenshots/matter_cluster_tool_standard_view.png "Matter Cluster Editor app default view at startup")
 
 !!! info "Tip"
     You can learn about tool functionalities directly from the tool interface by hovering your mouse over elements to see dedicated tooltips with information about each element.
@@ -39,7 +39,7 @@ The buttons in this section let you load Matter cluster XML files and save them.
 
 This section includes the **Save extension to file** button, which checks the difference between the current filled-in values and the loaded cluster and saves the difference to an XML file.
 
-The {{app_name}} automatically compares your current cluster with the originally loaded cluster and saves only the differences as an extension file. This means the following:
+The Matter Cluster Editor app automatically compares your current cluster with the originally loaded cluster and saves only the differences as an extension file. This means the following:
 
 - Only newly added elements are included in the extension.
 - Modified elements are included with their new values.
@@ -532,13 +532,13 @@ You can edit the following fields of the feature entry.
 
 Here you can view application information, restore settings to default, access source code, and documentation. You also can find information on the selected device, access support tools, and enable verbose logging.
 
-![{{app_name}} About tab](./screenshots/matter_cluster_tool_about_tab.png "{{app_name}} About tab")
+![Matter Cluster Editor app About tab](./screenshots/matter_cluster_tool_about_tab.png "Matter Cluster Editor app About tab")
 
 ## Log
 
 The Log panel allows you to view the most important log events, tagged with a timestamp.
 
-Given that the {{app_name}} does not interact with any devices, it does not use the Log panel. For this reason, the panel is hidden by default (the **SHOW LOG** toggle is disabled).
+Given that the Matter Cluster Editor app does not interact with any devices, it does not use the Log panel. For this reason, the panel is hidden by default (the **SHOW LOG** toggle is disabled).
 
 ## Notifications
 

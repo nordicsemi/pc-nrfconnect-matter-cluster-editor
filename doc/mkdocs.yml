@@ -53,7 +53,6 @@ plugins:
 
 extra:
   test: This is a test abbreviation snippet
-  app_name: Matter Cluster Editor app
   NCS: nRF Connect SDK
   matter_requirements: To take full advantage of this guide, you need to be familiar with the [Matter architecture](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/overview/architecture.html) and the [Matter Device Type Library specification](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/overview/data_model.html).
 

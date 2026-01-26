@@ -1,6 +1,6 @@
 # Creating a new Matter cluster
 
-This guide describes how to create a new Matter cluster and save it as an XML file using the {{app_name}}.
+This guide describes how to create a new Matter cluster and save it as an XML file using the Matter Cluster Editor app.
 
 Creating a new Matter cluster involves defining the cluster's basic properties and adding the necessary elements (commands, attributes, events, enumerations, and structures) that make up the cluster's functionality.
 
@@ -23,4 +23,4 @@ To create a new cluster definition, complete the following steps:
 4. Click the **Save** button to save the cluster to a file.<br/>
    The cluster name should be unique across all available clusters in the Matter Data Model.
 
-The {{app_name}} validates that all required fields are filled and saves the file. If there are any errors, you will see an [error message](overview.md#notifications).
+The Matter Cluster Editor app validates that all required fields are filled and saves the file. If there are any errors, you will see an [error message](overview.md#notifications).

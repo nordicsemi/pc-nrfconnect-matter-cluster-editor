@@ -1,6 +1,6 @@
 # Creating a new device type
 
-This guide describes how to create a new device type and save it as an XML file using the {{app_name}}.
+This guide describes how to create a new device type and save it as an XML file using the Matter Cluster Editor app.
 
 A device type defines the clusters, attributes, commands, and events that a specific type of Matter device supports. Creating a new device type allows you to define custom device functionality that isn't covered by the standard Matter Device Type Library specification.
 
@@ -33,4 +33,4 @@ To create a new device type, complete the following steps:
 6. Click the **Save extension to file** or **Save cluster type to file** button depending on the purpose of the file.<br/>
    See [Overview](overview.md#side-panel-sections) for more information about these buttons.
 
-The {{app_name}} validates that all required fields are filled before saving. If required fields are not filled, you will see an [error message](overview.md#notifications).
+The Matter Cluster Editor app validates that all required fields are filled before saving. If required fields are not filled, you will see an [error message](overview.md#notifications).

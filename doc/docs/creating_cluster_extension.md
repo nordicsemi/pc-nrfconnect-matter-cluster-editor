@@ -1,6 +1,6 @@
 # Creating a cluster extension
 
-This guide describes how to create a cluster extension and save it as an XML file using the {{app_name}}.
+This guide describes how to create a cluster extension and save it as an XML file using the Matter Cluster Editor app.
 
 A cluster extension allows you to add new attributes, commands, events, enumerations, or structures to an existing Matter cluster without modifying the original cluster definition. This is useful when you need to extend standard Matter clusters with manufacturer-specific functionality.
 
@@ -8,7 +8,7 @@ A cluster extension allows you to add new attributes, commands, events, enumerat
 Make also sure that you have an existing cluster XML file that you want to extend, a clear understanding of what additional elements need to be added, and familiarity with the original cluster's structure and functionality.
 
 !!! note "Note"
-    When adding new elements, make sure that the codes you assign do not conflict with existing elements in the original cluster. The {{app_name}} will help you identify conflicts when saving.
+    When adding new elements, make sure that the codes you assign do not conflict with existing elements in the original cluster. The Matter Cluster Editor app will help you identify conflicts when saving.
 
 To create a cluster extension, complete the following steps:
 
@@ -30,4 +30,4 @@ To create a cluster extension, complete the following steps:
 
 4. Click the **Save extension to file** button to save the cluster extension to a file.
 
-The {{app_name}} validates that all required fields are filled before saving. If required fields are not filled or if there are no differences between the current cluster and the loaded cluster, you will see a [notification](overview.md#notifications).
+The Matter Cluster Editor app validates that all required fields are filled before saving. If required fields are not filled or if there are no differences between the current cluster and the loaded cluster, you will see a [notification](overview.md#notifications).
