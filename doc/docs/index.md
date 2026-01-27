@@ -4,10 +4,6 @@ The Matter Cluster Editor app provides a graphical user interface for creating a
 
 To work with Matter using Nordic Semiconductor devices, read the [Matter protocol documentation in the {{NCS}}](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/index.html). For more information about the Matter Data Model, see the [Matter Data Model and device types](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/overview/data_model.html) page.
 
-## Installing the Matter Cluster Editor app
-
-For installation instructions, see [Installing nRF Connect for Desktop apps](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/installing_apps.html) in the nRF Connect for Desktop documentation.
-
 ## Overview
 
 The Matter Data Model defines clusters that are common for all manufacturers and can be used as a base for devices.
@@ -27,9 +23,9 @@ The app supports the following features:
 Based on your edits, the tool generates a new XML file with the cluster definition or an extension to the existing cluster.
 You can use the XML file as an argument in the Matter west commands to add the XML file to the Matter ZCL database.
 
-## Installation
+## Installing the Matter Cluster Editor app
 
-You can run the Matter Cluster Editor app when you [download and install nRF Connect for Desktop](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop/Download).
+For installation instructions, see [Installing nRF Connect for Desktop apps](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/installing_apps.html) in the nRF Connect for Desktop documentation.
 
 ## Supported devices
 
