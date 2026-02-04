@@ -16,9 +16,9 @@ To create a cluster extension, complete the following steps:
    Use the system file dialog to select the XML cluster file.
    If the file contains more than one cluster, the tool shows the list of available clusters in the context menu.
 
-   ![Load cluster file](./screenshots/matter_cluster_tool_load_multiple_clusters.png "Load cluster file")
+    ![Load cluster file](./screenshots/matter_cluster_tool_load_multiple_clusters.png "Load cluster file")
 
-   After loading, all tabs will be populated with the data from the loaded cluster.
+    After loading, all tabs will be populated with the data from the loaded cluster.
 
 2. Open one by one the Commands, Attributes, and Events tabs and add the required elements to the cluster.<br/>
    Click the **Add** button on the top of each element tab to add a new element to the cluster.
