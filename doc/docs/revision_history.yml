@@ -1,0 +1,11 @@
+tool:
+- name: Matter Cluster Editor app
+  link: true
+sections:
+- name: January 2026
+  entries:
+  - "Renamed the Home page to [Get started](./index.md)."
+  - "Removed the separate Installing the Matter Cluster Editor app page. This page is now a section of the Get started page."
+- name: August 2025
+  entries:
+  - "First release"
