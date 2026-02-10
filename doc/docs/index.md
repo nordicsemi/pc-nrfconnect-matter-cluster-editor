@@ -1,4 +1,4 @@
-# Matter Cluster Editor app
+# Get started
 
 The Matter Cluster Editor app provides a graphical user interface for creating and editing Matter clusters, cluster extensions, and device types in accordance with the Matter Data Model. It is available as one of the applications in [nRF Connect for Desktop](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/index.html).
 
