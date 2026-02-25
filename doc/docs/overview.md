@@ -13,10 +13,10 @@ When you start the Matter Cluster Editor app, the application main window appear
 
 ## Common interface
 
-This app uses the nRF Connect for Desktop UI framework. Shared UI elements such as **Select device**, **About** tab, and **Log** panel are described in the [Common user interface](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/common_interface.html) documentation.
+This app uses the nRF Connect for Desktop UI framework. Shared UI elements such as **Select device**, **About** tab, and **Log** panel are described in the [Common user interface](https://docs.nordicsemi.com/bundle/swtools_docs/page/common_interface.html) documentation.
 
 !!! note "Note"
-    Given that the Matter Cluster Editor app does not interact with any devices, it does not use the Log panel. For this reason, the panel is hidden by default (the **Show Log** toggle is disabled). See the [Common user interface](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/common_interface.html#log) for general Log panel information.
+    Given that the Matter Cluster Editor app does not interact with any devices, it does not use the Log panel. For this reason, the panel is hidden by default (the **Show Log** toggle is disabled). See the [Common user interface](https://docs.nordicsemi.com/bundle/swtools_docs/page/common_interface.html#log) for general Log panel information.
 
 ## Side panel sections
 
