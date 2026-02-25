@@ -151,13 +151,10 @@ const OpenSavePanelButtons = () => {
                                             validationResult.extensions
                                                 .length === 1
                                         ) {
-                                            // Single extension, auto-load it
-                                            ClusterFile.initializeExtension(
-                                                validationResult.extensions[0],
-                                                0
-                                            );
+                                            // Single extension: loadExtension() already called
+                                            // initializeExtension(); do not call it again or the
+                                            // code would be zeroed by stale React state in saveCurrentChanges().
                                         }
-
                                         // Emit event to update side panel
                                         eventEmitter.emit(
                                             'availableItemsChanged'
