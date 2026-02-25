@@ -11,6 +11,13 @@ When you start the Matter Cluster Editor app, the application main window appear
 
     ![Cluster element tooltip](./screenshots/matter_cluster_tool_tooltip.png "Cluster element tooltip")
 
+## Common interface
+
+This app uses the nRF Connect for Desktop UI framework. Shared UI elements such as **Select device**, **About** tab, and **Log** panel are described in the [Common user interface](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/common_interface.html) documentation.
+
+!!! note "Note"
+    Given that the Matter Cluster Editor app does not interact with any devices, it does not use the Log panel. For this reason, the panel is hidden by default (the **Show Log** toggle is disabled). See the [Common user interface](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/common_interface.html#log) for general Log panel information.
+
 ## Side panel sections
 
 On the left side of the tool, the app includes several UI elements for managing Matter cluster files.
@@ -527,18 +534,6 @@ You can edit the following fields of the feature entry.
 | **Code**              | A text input field for the code name of the feature. For example, `DL` for Door Lock. If no code name is available, use `00`. The code name must match the Matter Data Model or your custom cluster.     | Yes      |
 | **Name**              | A text input field for the name of the feature.                 | Yes      |
 | **Delete** (bin icon) | Delete the event from the list.                                                         | No       |
-
-## About tab
-
-Here you can view application information, restore settings to default, access source code, and documentation. You also can find information on the selected device, access support tools, and enable verbose logging.
-
-![Matter Cluster Editor app About tab](./screenshots/matter_cluster_tool_about_tab.png "Matter Cluster Editor app About tab")
-
-## Log
-
-The Log panel allows you to view the most important log events, tagged with a timestamp.
-
-Given that the Matter Cluster Editor app does not interact with any devices, it does not use the Log panel. For this reason, the panel is hidden by default (the **SHOW LOG** toggle is disabled).
 
 ## Notifications
 
