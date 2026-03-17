@@ -20,12 +20,12 @@ project.
 
 The nRF Connect Matter Manufacturer Cluster Editor application is installed from
 nRF Connect for Desktop. For detailed steps, see
-[Installing nRF Connect for Desktop apps](https://docs.nordicsemi.com/bundle/nrf-connect-desktop/page/installing_apps.html)
+[Installing nRF Connect for Desktop apps](https://docs.nordicsemi.com/bundle/swtools_docs/page/app/nrf-connect-desktop/installing_apps.html)
 in the nRF Connect for Desktop documentation.
 
 ## Documentation
 
-See the [Matter Cluster Editor app](https://docs.nordicsemi.com/bundle/nrf-connect-matter-cluster-editor/page/index.html) official documentation, which includes information about the [application UI](https://docs.nordicsemi.com/bundle/nrf-connect-matter-cluster-editor/page/overview.html) and [guides about how to create new Matter clusters](https://docs.nordicsemi.com/bundle/nrf-connect-matter-cluster-editor/page/creating_new_cluster.html).
+See the [Matter Cluster Editor app](https://docs.nordicsemi.com/bundle/swtools_docs/page/app/pc-nrfconnect-matter-cluster-editor/index.html) official documentation, which includes information about the [application UI](https://docs.nordicsemi.com/bundle/swtools_docs/page/app/pc-nrfconnect-matter-cluster-editor/overview.html) and [guides about how to create new Matter clusters](https://docs.nordicsemi.com/bundle/swtools_docs/page/app/pc-nrfconnect-matter-cluster-editor/creating_new_cluster.html).
 
 To learn how to use the editor in practice, see also the
 [Creating manufacturer-specific clusters in Matter application](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/matter/getting_started/custom_clusters.html)
