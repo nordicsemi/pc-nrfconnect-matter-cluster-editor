@@ -33,5 +33,5 @@ The Matter Cluster Editor app has no specific device requirements.
 
 ## Application source code
 
-The code of the application is open source and [available on GitHub](https://github.com/NordicSemiconductor/pc-nrfconnect-matter-cluster-editor).
+The code of the application is open source and [available on GitHub](https://github.com/nordicsemi/pc-nrfconnect-matter-cluster-editor).
 Feel free to fork the repository and clone it for secondary development or feature contributions.
