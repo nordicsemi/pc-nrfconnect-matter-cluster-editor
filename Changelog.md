@@ -1,4 +1,4 @@
-## 1.0.1 - 2026-03-31
+## 1.0.1 - 2026-04-09
 
 -   Fixed a bug where the cluster code was set to 0 after loading a cluster
     extension.
