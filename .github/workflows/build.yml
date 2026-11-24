@@ -6,6 +6,10 @@ on:
         branches-ignore:
             - main # Skip for main because we build while releasing to "latest"
 
+permissions:
+    contents: read
+    pull-requests: write
+
 jobs:
     build:
         uses: nordicsemi/pc-nrfconnect-shared/.github/workflows/build-app.yml@main
